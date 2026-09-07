@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}اشتراک میزبان | جاکو{% endblock %}
+{% block head %}<script>document.addEventListener('DOMContentLoaded',()=>{const el=document.getElementById('subscription-timer');if(!el)return;function tick(){const end=new Date(el.dataset.end.replace(' ','T'));let s=Math.max(0,Math.floor((end-new Date())/1000));const d=Math.floor(s/86400);s%=86400;const h=Math.floor(s/3600);s%=3600;const m=Math.floor(s/60);s%=60;el.textContent=`⏳ ${d} روز و ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} باقی‌مانده`;if(d===0&&h===0&&m===0&&s===0)location.reload();}tick();setInterval(tick,1000);});</script>{% endblock %}
+{% block content %}<div class="dashboard-page"><div class="dashboard-header"><div><span class="eyebrow">درآمدزایی</span><h1>خرید اشتراک میزبان</h1><p>اشتراک فقط پس از پرداخت موفق فعال می‌شود و پس از پایان زمان به‌صورت خودکار منقضی خواهد شد.</p></div></div>
+{% if subscription %}<div class="active-plan">اشتراک فعال: <b>{{ subscription.plan_name }}</b><span id="subscription-timer" data-end="{{ subscription.ends_at }}">در حال محاسبه...</span></div>{% endif %}
+<div class="plan-grid">{% for p in plans %}<article class="plan-card"><h2>{{ p.name }}</h2><p>{{ p.description }}</p><strong>{{ 'رایگان' if p.price == 0 else '{:,}'.format(p.price) }}</strong><span>{% if p.price == 0 %}۷ روز ویژه میزبان{% else %}تومان / {{ p.duration_days }} روز{% endif %}</span>
+{% if p.price == 0 and p.duration_days == 7 %}
+  {% if trial_used %}<button class="btn btn-outline full" type="button" disabled>قبلاً استفاده شده</button>
+  {% else %}<form method="post" action="{{ url_for('claim_free_host_trial',plan_id=p.id) }}"><button class="btn btn-primary full">فعال‌سازی رایگان ۷ روزه</button></form>{% endif %}
+{% else %}
+  <form method="post" action="{{ url_for('buy_subscription',plan_id=p.id) }}"><button class="btn btn-primary full">خرید و پرداخت</button></form>
+{% endif %}</article>{% endfor %}</div></div>{% endblock %}

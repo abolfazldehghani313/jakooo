@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block title %}جاکو | هر سفر، یک خاطره ماندگار{% endblock %}
+{% block body_class %}home-page{% endblock %}
+
+{% macro listing_img(l) %}{% if l.images and l.images|length %}{{ url_for('static',filename='uploads/'~l.images[0].filename) }}{% else %}{{ url_for('static',filename='images/placeholder.svg') }}{% endif %}{% endmacro %}
+{% macro story_img(s) %}{% if s.image_filename %}{{ url_for('static',filename='uploads/'~s.image_filename) }}{% elif s.listing_image %}{{ url_for('static',filename='uploads/'~s.listing_image) }}{% else %}{{ url_for('static',filename='images/placeholder.svg') }}{% endif %}{% endmacro %}
+{% macro slide_img(s) %}{% if s.image_filename %}{% if s.image_filename.startswith('images/') %}{{ url_for('static',filename=s.image_filename) }}{% else %}{{ url_for('static',filename='uploads/'~s.image_filename) }}{% endif %}{% endif %}{% endmacro %}
+
+{% block content %}
+<section class="hero hero-slider" data-slider>
+  <div class="hero-slides">
+    {% for s in home_slides %}
+    <article class="hero-slide {% if loop.first %}is-active{% endif %}" data-slide>
+      {% if slide_img(s) %}
+        <div class="hero-slide-bg" style="background-image:linear-gradient(180deg,rgba(3,24,18,.10),rgba(3,25,20,.72)),url('{{ slide_img(s) }}')"></div>
+      {% else %}
+        <div class="hero-slide-bg hero-slide-fallback"></div>
+      {% endif %}
+
+      {% if s.target_type == 'listing' and s.target_listing_id %}
+      <a class="hero-slide-link" href="{{ url_for('listing_detail', listing_id=s.target_listing_id) }}" aria-label="مشاهده اقامتگاه"></a>
+      {% elif s.target_type == 'external' and s.external_url %}
+      <a class="hero-slide-link" href="{{ s.external_url }}" target="_blank" rel="noopener" aria-label="مشاهده تبلیغ"></a>
+      {% endif %}
+      <div class="container hero-content">
+        <div class="hero-top">
+          <div class="hero-top-left">
+            <button class="hero-icon-btn" type="button" data-menu-open aria-label="باز کردن منو">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+            <a class="hero-icon-btn notification-btn" href="{{ url_for('notifications') if current_user else url_for('login') }}" aria-label="اعلان‌ها">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8M10 21h4"/></svg>
+              {% if unread_notifications %}<b class="top-notify-dot">{{ unread_notifications if unread_notifications < 100 else '99+' }}</b>{% endif %}
+            </a>
+          </div>
+
+          <a class="hero-logo" href="{{ url_for('index') }}">
+            <span>جاکو</span>
+            <i class="logo-home-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/><path d="M12 7.5v3"/></svg>
+            </i>
+          </a>
+
+          <form class="hero-location-form" action="{{ url_for('index') }}" method="get">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.2"/></svg>
+            <select name="city" class="hero-location-select" aria-label="انتخاب شهر" onchange="this.form.submit()">
+              <option value="">همه شهرها</option>
+              {% for city in cities %}
+                <option value="{{ city }}" {% if selected_city==city %}selected{% endif %}>{{ city }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+
+        <div class="hero-copy">
+          <h1>{{ s.title }}</h1>
+          <p>{{ s.subtitle or ('اقامتگاه‌های متنوع در ' ~ (selected_city if selected_city else 'کل خوزستان')) }}</p>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+
+    {% if not home_slides %}
+    <article class="hero-slide is-active" data-slide>
+      <div class="hero-slide-bg hero-slide-fallback"></div>
+      <div class="container hero-content">
+        <div class="hero-top">
+          <div class="hero-top-left">
+            <button class="hero-icon-btn" type="button" data-menu-open aria-label="باز کردن منو">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+            <a class="hero-icon-btn notification-btn" href="{{ url_for('notifications') if current_user else url_for('login') }}" aria-label="اعلان‌ها">
+              <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8M10 21h4"/></svg>
+            </a>
+          </div>
+          <a class="hero-logo" href="{{ url_for('index') }}">جاکو</a>
+          <form class="hero-location-form" action="{{ url_for('index') }}" method="get">
+            <svg viewBox="0 0 24 24"><path d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.2"/></svg>
+            <select name="city" class="hero-location-select" onchange="this.form.submit()">
+              <option value="">همه شهرها</option>
+              {% for city in cities %}<option value="{{ city }}">{{ city }}</option>{% endfor %}
+            </select>
+          </form>
+        </div>
+        <div class="hero-copy">
+          <h1>هر سفر، یک خاطره ماندگار</h1>
+          <p>اقامتگاه‌های متنوع در {{ selected_city or 'کل خوزستان' }}</p>
+        </div>
+      </div>
+    </article>
+    {% endif %}
+  </div>
+
+  {% if home_slides|length > 1 %}
+  <div class="hero-dots" aria-label="اسلایدهای صفحه اصلی">
+    {% for s in home_slides %}
+      <button type="button" data-slide-dot="{{ loop.index0 }}" class="{% if loop.first %}active{% endif %}" aria-label="اسلاید {{ loop.index }}"></button>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<!-- فقط یک اقدام اصلی برای جستجو؛ فرم قدیمی مقصد/ورود/خروج از صفحه اصلی حذف شده است. -->
+<section class="container home-search-action">
+  <a class="home-search-button" href="{{ url_for('search', city=selected_city) if selected_city else url_for('search') }}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 5 5"/></svg>
+    <span>جستجوی اقامتگاه</span>
+  </a>
+</section>
+
+{% if home_banner.get('home_banner_enabled','1') == '1' %}
+<section class="container green-ad-banner configurable-banner" aria-label="بنر تبلیغاتی">
+  {% set banner_image = home_banner.get('home_banner_image','') %}
+  {% if banner_image %}
+  <div class="green-ad-bg" style="background-image:linear-gradient(90deg,rgba(0,105,70,.96),rgba(0,105,70,.72)),url('{{ url_for('static',filename=banner_image) }}')"></div>
+  {% endif %}
+  <div class="green-ad-content">
+    <div class="green-ad-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16v12H4z"/><path d="M8 9h8M8 12h5"/><path d="M8 17v3M16 17v3"/></svg>
+    </div>
+    <div>
+      <span>تبلیغات جاکو</span>
+      <strong>{{ home_banner.get('home_banner_title') or 'اقامتگاهت را بیشتر دیده شو!' }}</strong>
+      <p>{{ home_banner.get('home_banner_text') or 'تبلیغ قابل کلیک بساز و کاربران را مستقیم به صفحه اقامتگاهت هدایت کن.' }}</p>
+    </div>
+    {% set bt=home_banner.get('home_banner_target_type','ads') %}
+    {% if bt=='listing' and home_banner.get('home_banner_listing_id') %}
+      {% set banner_url=url_for('listing_detail',listing_id=home_banner.get('home_banner_listing_id')|int) %}
+    {% elif bt=='external' and home_banner.get('home_banner_external_url') %}
+      {% set banner_url=home_banner.get('home_banner_external_url') %}
+    {% else %}
+      {% set banner_url=url_for('ads') if current_user and current_user.role in ['host','admin'] else url_for('register') %}
+    {% endif %}
+    <a class="green-ad-button" href="{{ banner_url }}" {% if bt=='external' %}target="_blank" rel="noopener"{% endif %}>
+      {{ home_banner.get('home_banner_button') or 'شروع تبلیغ' }}
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+</section>
+{% endif %}
+
+<section class="container section story-section">
+  <div class="section-head">
+    <a href="{{ url_for('search') }}">مشاهده همه ←</a>
+    <h2>استوری میزبان‌ها</h2>
+  </div>
+  <div class="stories-row">
+    {% if current_user and current_user.role in ['host','admin'] %}
+    <a class="story-add" href="{{ url_for('create_story') }}"><span>＋</span><strong>استوری خودت رو<br>به اشتراک بذار</strong></a>
+    {% endif %}
+    {% for s in stories %}
+    <a class="story-card" href="{{ url_for('listing_detail', listing_id=s.listing_id) if s.listing_id else url_for('index') }}">
+      <div class="story-ring"><img src="{{ story_img(s) }}" alt="{{ s.host_name }}"></div>
+      <strong>{{ s.host_name }}</strong>
+      <small>{{ s.listing_title or 'استوری جاکو' }}</small>
+      {% if s.status == 'active' and s.duration_hours %}<em>{{ s.duration_hours }}h</em>{% endif %}
+    </a>
+    {% else %}
+    <div class="empty-state wide">هنوز استوری فعالی وجود ندارد.</div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container section">
+  <div class="section-head"><a href="{{ url_for('search') }}">مشاهده همه ←</a><h2>دسته‌بندی اجاره‌ها</h2></div>
+  <div class="categories">
+    {% for value,label,icon in categories %}
+    <a class="category-card cat-{{ value }}" href="{{ url_for('search',category=value) }}">
+      <span class="category-icon" aria-hidden="true">
+        {{ icon|safe }}
+      </span>
+      <strong>{{ label }}</strong>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+{% if sponsored_listings %}
+<section class="container section">
+  <div class="section-head"><span class="ad-label">Sponsored</span><h2>اقامتگاه‌های ویژه 📣</h2></div>
+  <div class="listing-grid">
+    {% for l in sponsored_listings %}
+    <article class="listing-card sponsored">
+      <a href="{{ url_for('ad_click',ad_id=l.ad_id) }}" class="listing-photo"><img src="{{ listing_img(l) }}" alt="{{ l.title }}"><span class="sponsor-tag">Sponsored</span><span class="rating-badge">★ {{ l.rating }}</span></a>
+      <div class="listing-body"><h3><a href="{{ url_for('listing_detail',listing_id=l.id) }}">{{ l.title }}</a></h3><p class="muted">{{ l.city }}{% if l.area %}، {{ l.area }}{% endif %}</p><div class="price">{{ '{:,}'.format(l.price_per_night) }} <small>تومان / شب</small></div></div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if promoted_listings %}
+<section class="container section">
+  <div class="section-head"><span class="upgrade-label">🔥 ارتقای ویژه</span><h2>اقامتگاه‌های ارتقایافته</h2></div>
+  <div class="listing-grid">
+    {% for l in promoted_listings %}
+    <article class="listing-card promoted">
+      <a href="{{ url_for('listing_detail',listing_id=l.id) }}" class="listing-photo"><img src="{{ listing_img(l) }}" alt="{{ l.title }}"><span class="promoted-tag">۷ روز بالاتر</span><span class="rating-badge">★ {{ l.rating }}</span></a>
+      <div class="listing-body"><h3>{{ l.title }}</h3><p class="muted">{{ l.city }}{% if l.area %}، {{ l.area }}{% endif %}</p><div class="price">{{ '{:,}'.format(l.price_per_night) }} <small>تومان / شب</small></div></div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="container section">
+  <div class="section-head"><a href="{{ url_for('search') }}">مشاهده همه ←</a><h2>اقامتگاه‌های ویژه <span class="gold">☆</span></h2></div>
+  <div class="listing-grid">
+    {% for l in featured_listings %}
+    <article class="listing-card">
+      <a href="{{ url_for('listing_detail',listing_id=l.id) }}" class="listing-photo"><img src="{{ listing_img(l) }}" alt="{{ l.title }}"><span class="favorite-heart">♡</span><span class="rating-badge">★ {{ l.rating }}</span></a>
+      <div class="listing-body"><h3><a href="{{ url_for('listing_detail',listing_id=l.id) }}">{{ l.title }}</a></h3><p class="muted">{{ l.city }}{% if l.area %}، {{ l.area }}{% endif %}</p><div class="price">{{ '{:,}'.format(l.price_per_night) }} <small>تومان / شب</small></div></div>
+    </article>
+    {% else %}
+    <div class="empty-state wide"><h3>هنوز اقامتگاهی ثبت نشده</h3><p>اولین اقامتگاه را ثبت کنید.</p></div>
+    {% endfor %}
+  </div>
+</section>
+
+
+
+<section class="container trust-row">
+  <div><span>♢</span><strong>اقامتگاه‌های تأیید شده</strong><p>همه اقامتگاه‌ها قبل از انتشار بررسی می‌شوند.</p></div>
+  <div><span>♧</span><strong>پشتیبانی ۲۴ ساعته</strong><p>در هر زمان که نیاز داشتید کنار شما هستیم.</p></div>
+  <div><span>▣</span><strong>پرداخت امن</strong><p>پرداخت‌های امن و مطمئن با درگاه بانکی.</p></div>
+  <div><span>★</span><strong>نظرات واقعی کاربران</strong><p>با استفاده از نظرات کاربران انتخاب بهتری داشته باشید.</p></div>
+</section>
+{% endblock %}
+{% block head %}<script defer src="{{ url_for('static',filename='js/jalali.js') }}"></script><script defer src="{{ url_for('static',filename='js/home.js') }}"></script>{% endblock %}

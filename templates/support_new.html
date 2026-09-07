@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}تیکت جدید | جاکو{% endblock %}
+{% block content %}
+<div class="dashboard-page"><section class="panel-card narrow-panel">
+  <div class="panel-title"><h2>ثبت تیکت جدید</h2></div>
+  <form method="post" class="form-stack">
+    <label>موضوع<input name="subject" maxlength="120" required></label>
+    <label>دسته‌بندی<select name="category"><option>رزرو</option><option>پرداخت</option><option>اقامتگاه</option><option>تبلیغات</option><option>استوری</option><option>عمومی</option></select></label>
+    <label>توضیحات<textarea name="body" rows="7" required placeholder="مشکل را کامل توضیح دهید..."></textarea></label>
+    <button class="btn btn-primary" type="submit">ارسال به پشتیبانی</button>
+  </form>
+</section></div>
+{% endblock %}

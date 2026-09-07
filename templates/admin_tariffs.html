@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}تعرفه‌ها و اشتراک | جاکو{% endblock %}
+{% block content %}
+<section class="dashboard-page">
+<div class="dashboard-header"><div><span class="eyebrow">مدیریت جاکو</span><h1>تعرفه‌ها و اشتراک</h1><p>از این صفحه بدون تغییر کد، قیمت و مدت خدمات را مدیریت کن.</p></div></div>
+<form method="post" class="form-card">
+<h2>تعرفه استوری</h2>
+<div class="form-four">{% for i in range(1,9) %}{% set row=story_tariffs[i-1] if i <= story_tariffs|length else none %}
+<label>مدت (ساعت)<input type="number" min="1" name="story_duration_{{i}}" value="{{ row.duration if row else '' }}"></label>
+<label>قیمت (تومان)<input type="number" min="0" name="story_price_{{i}}" value="{{ row.price if row else '' }}"></label>{% endfor %}</div>
+<h2 style="margin-top:24px">تعرفه تبلیغات</h2>
+<div class="form-four">{% for i in range(1,9) %}{% set row=ad_tariffs[i-1] if i <= ad_tariffs|length else none %}
+<label>مدت (ساعت)<input type="number" min="1" name="ad_duration_{{i}}" value="{{ row.duration if row else '' }}"></label>
+<label>قیمت (تومان)<input type="number" min="0" name="ad_price_{{i}}" value="{{ row.price if row else '' }}"></label>{% endfor %}</div>
+<button class="btn btn-primary" type="submit">ذخیره تعرفه‌ها</button>
+</form>
+
+<section class="panel-card">
+<div class="panel-title"><h2>پلن‌های اشتراک</h2></div>
+{% for p in plans %}
+<form method="post" action="{{ url_for('admin_subscription_plan_save') }}" class="table-row" style="gap:12px;align-items:end;flex-wrap:wrap">
+<input type="hidden" name="plan_id" value="{{p.id}}">
+<label>نام<input name="name" value="{{p.name}}" required></label>
+<label>مدت روز<input type="number" min="1" name="duration_days" value="{{p.duration_days}}" required></label>
+<label>قیمت<input type="number" min="0" name="price" value="{{p.price}}" required></label>
+<label>توضیحات<input name="description" value="{{p.description or ''}}"></label>
+<label class="consent-check"><input type="checkbox" name="is_active" value="1" {% if p.is_active %}checked{% endif %}> فعال</label>
+<button class="btn btn-primary small">ذخیره</button>
+</form>
+{% endfor %}
+<form method="post" action="{{url_for('admin_subscription_plan_save')}}" class="form-two" style="margin-top:18px">
+<label>نام پلن جدید<input name="name" placeholder="مثلاً ویژه"></label>
+<label>مدت (روز)<input type="number" name="duration_days" min="1" value="30"></label>
+<label>قیمت (تومان)<input type="number" name="price" min="0" value="0"></label>
+<label>توضیحات<input name="description"></label>
+<input type="hidden" name="is_active" value="1">
+<button class="btn btn-outline">افزودن پلن</button>
+</form>
+</section>
+<section class="panel-card" style="margin-top:24px">
+<div class="panel-title"><h2>🔵 تعرفه تیک آبی</h2><p class="muted">مدیر می‌تواند مدت و قیمت را بدون کدنویسی تغییر دهد.</p></div>
+{% for p in blue_tick_plans %}
+<form method="post" action="{{url_for('admin_blue_tick_plan_save')}}" class="table-row" style="gap:12px;align-items:end;flex-wrap:wrap">
+<input type="hidden" name="plan_id" value="{{p.id}}">
+<label>نام<input name="name" value="{{p.name}}" required></label>
+<label>مدت (روز)<input type="number" min="1" name="duration_days" value="{{p.duration_days}}" required></label>
+<label>قیمت (تومان)<input type="number" min="0" name="price" value="{{p.price}}" required></label>
+<label>توضیحات<input name="description" value="{{p.description or ''}}"></label>
+<label class="consent-check"><input type="checkbox" name="is_active" value="1" {% if p.is_active %}checked{% endif %}> فعال</label>
+<button class="btn btn-primary small" type="submit">ذخیره</button>
+</form>
+{% endfor %}
+<form method="post" action="{{url_for('admin_blue_tick_plan_save')}}" class="form-two" style="margin-top:18px">
+<label>نام پلن جدید<input name="name" placeholder="مثلاً تیک آبی ۶۰ روزه" required></label>
+<label>مدت (روز)<input type="number" name="duration_days" min="1" value="30" required></label>
+<label>قیمت (تومان)<input type="number" name="price" min="0" value="150000" required></label>
+<label>توضیحات<input name="description"></label><input type="hidden" name="is_active" value="1">
+<button class="btn btn-outline" type="submit">افزودن پلن تیک آبی</button>
+</form></section>
+</section>
+{% endblock %}

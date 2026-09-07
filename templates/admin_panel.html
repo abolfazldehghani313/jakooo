@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{% block title %}پنل مدیریت | جاکو{% endblock %}
+{% block content %}
+<div class="dashboard-page admin-dashboard">
+  <div class="dashboard-header">
+    <div><span class="eyebrow">مدیریت جاکو</span><h1>پنل مدیریت</h1><p>تأیید اقامتگاه‌ها، رزروها، تبلیغات، استوری‌ها، کاربران و صفحه اصلی.</p></div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><span>کاربران</span><strong>{{ users|length }}</strong></div>
+    <div class="stat-card"><span>🔴 آگهی‌های منتظر بررسی</span><strong>{{ counts.pending_listings }}</strong></div>
+    <div class="stat-card"><span>🟠 نیازمند اصلاح</span><strong>{{ counts.revision_listings }}</strong></div>
+    <div class="stat-card"><span>رزرو در انتظار</span><strong>{{ counts.pending_bookings }}</strong></div>
+    <div class="stat-card"><span>تبلیغ در انتظار</span><strong>{{ counts.pending_ads }}</strong></div>
+    <div class="stat-card"><span>استوری در انتظار</span><strong>{{ counts.pending_stories }}</strong></div>
+    <div class="stat-card"><span>درآمد ثبت‌شده</span><strong>{{ '{:,}'.format(revenue or 0) }}</strong><small>تومان</small></div>
+    <div class="stat-card"><span>تیکت باز</span><strong>{{ counts.open_tickets }}</strong></div>
+  </div>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar panel-card">
+      <h2>مدیریت</h2>
+      <nav class="admin-menu">
+        <a class="active" href="{{ url_for('admin_panel') }}"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="7" rx="1"/><rect x="14" y="4" width="6" height="7" rx="1"/><rect x="4" y="13" width="6" height="7" rx="1"/><rect x="14" y="13" width="6" height="7" rx="1"/></svg></span>داشبورد</a>
+        <a href="#listings"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></span>اقامتگاه‌ها</a>
+        <a href="#bookings"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>رزروها</a>
+        <a href="#ads"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H4z"/><path d="M8 9h8M8 12h5"/><path d="M8 17v3M16 17v3"/></svg></span>تبلیغات</a>
+        <a href="#stories"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.4"/><path d="m5 17 4-4 3 3 2-2 5 5"/></svg></span>استوری‌ها</a>
+        <a href="#home-slides"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m6 16 4-4 3 3 3-4 2 2"/></svg></span>اسلایدر صفحه اصلی</a>
+        <a href="#finance"><span class="admin-menu-icon">💳</span>تراکنش‌ها</a><a href="#coupons"><span class="admin-menu-icon">🎫</span>کد تخفیف</a><a href="#reports"><span class="admin-menu-icon">⚠️</span>گزارش‌ها</a><a href="#categories"><span class="admin-menu-icon">🗂️</span>دسته‌بندی‌ها</a><a href="#cities"><span class="admin-menu-icon">📍</span>شهرها</a><a href="#app-settings"><span class="admin-menu-icon">📱</span>اپلیکیشن و PWA</a><a href="#content-management"><span class="admin-menu-icon">📝</span>متن صفحات</a><a href="#users"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 21c.5-4 2.7-6 6-6s5.5 2 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.8M17 15c2.3.4 3.7 2 4 4"/></svg></span>کاربران</a>
+        <a href="#support"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg></span>پشتیبانی</a>
+        <a href="{{ url_for('admin_payment_settings') }}"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/><circle cx="17" cy="15" r="1"/></svg></span>تنظیمات درگاه پرداخت</a>
+        <a href="{{ url_for('admin_auth_settings') }}"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-5"/></svg></span>تنظیمات احراز هویت</a>
+        <a href="{{ url_for('admin_tariffs') }}"><span class="admin-menu-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>تعرفه‌ها و نقشه</a>
+      </nav>
+    </aside>
+
+    <main class="admin-content">
+      <section id="listings" class="panel-card">
+        <div class="panel-title"><h2>تأیید / رد اقامتگاه‌ها</h2></div>
+        {% for l in listings %}
+        <div class="table-row">
+          <div><strong>{{ l.title }}</strong><small>{{ l.city }}{% if l.area %}، {{ l.area }}{% endif %} · میزبان: {{ l.host.full_name }} · {{ l.created_at }}</small></div>
+          <div class="inline-actions">
+            <a class="btn btn-outline small" href="{{ url_for('admin_listing_detail',listing_id=l.id) }}">مشاهده همه مشخصات</a>
+            {% if l.workflow_status in ['pending_review','needs_revision'] or l.status=='pending' %}
+            <form method="post" action="{{ url_for('admin_listing_action',listing_id=l.id,action='approve') }}"><button class="btn btn-success small">تأیید ✅</button></form>
+            <form method="post" action="{{ url_for('admin_listing_action',listing_id=l.id,action='revision') }}"><input name="reason" placeholder="دلیل اصلاح" class="mini-input" required><button class="btn btn-outline small">اصلاح 🔧</button></form>
+            <form method="post" action="{{ url_for('admin_listing_action',listing_id=l.id,action='reject') }}"><input name="reason" placeholder="دلیل رد" class="mini-input" required><button class="btn btn-danger small">رد ❌</button></form>
+            {% else %}<span class="status-badge status-{{ l.workflow_status or l.status }}">{% if l.workflow_status=='approved' %}تأیید شده{% elif l.workflow_status=='rejected' %}رد شده{% elif l.workflow_status=='needs_revision' %}نیازمند اصلاح{% elif l.workflow_status=='expired' %}منقضی شده{% else %}در انتظار بررسی{% endif %}</span>{% endif %}
+          </div>
+        </div>
+        {% else %}<div class="empty-state">اقامتگاهی وجود ندارد.</div>{% endfor %}
+      </section>
+
+      <section id="bookings" class="panel-card">
+        <div class="panel-title"><h2>مدیریت رزروها</h2></div>
+        {% for b in bookings %}
+        <div class="table-row">
+          <div><strong>{{ b.title }}</strong><small>{{ b.guest_name }} · {{ b.total_price }} تومان</small></div>
+          <div class="inline-actions">
+            {% if b.status=='pending' %}
+            <form method="post" action="{{ url_for('admin_booking_action',booking_id=b.id,action='approve') }}"><button class="btn btn-success small">تأیید</button></form>
+            <form method="post" action="{{ url_for('admin_booking_action',booking_id=b.id,action='reject') }}"><button class="btn btn-danger small">رد</button></form>
+            {% else %}<span class="status-badge">{{ b.status }}</span>{% endif %}
+          </div>
+        </div>
+        {% else %}<div class="empty-state">رزروی وجود ندارد.</div>{% endfor %}
+      </section>
+
+      <section id="stories" class="panel-card">
+        <div class="panel-title"><h2>استوری‌های در انتظار تأیید</h2></div>
+        {% for s in stories %}
+        <div class="table-row">
+          <div><strong>{{ s.listing_title or 'استوری عمومی' }}</strong><small>{{ s.host_name }} · {{ s.duration_hours }} ساعت</small></div>
+          <div class="inline-actions">
+            {% if s.status=="pending" %}
+            <form method="post" action="{{ url_for('admin_story_action',story_id=s.id,action='approve') }}"><button class="btn btn-success small">تأیید</button></form>
+            <form method="post" action="{{ url_for('admin_story_action',story_id=s.id,action='reject') }}"><button class="btn btn-danger small">رد</button></form>
+            {% else %}<span class="status-badge status-{{ s.status }}">{{ s.status }}</span>{% endif %}
+          </div>
+        </div>
+        {% else %}<div class="empty-state">استوری در انتظار ندارید.</div>{% endfor %}
+      </section>
+
+      <section id="ads" class="panel-card">
+        <div class="panel-title"><h2><span class="title-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H4z"/><path d="M8 9h8M8 12h5"/><path d="M8 17v3M16 17v3"/></svg></span>تبلیغات</h2></div>
+        {% for a in ads %}
+        <div class="table-row">
+          <div><strong>{{ a.title }}</strong><small>{{ a.host_name }} · {{ a.duration_hours or 1 }} ساعت · {{ '{:,}'.format(a.price or 0) }} تومان · کلیک {{ a.clicks }} · نمایش {{ a.impressions }}</small></div>
+          <div class="inline-actions">
+            {% if a.status=='pending' %}
+            <form method="post" action="{{ url_for('admin_ad_action',ad_id=a.id,action='approve') }}"><button class="btn btn-success small">تأیید</button></form>
+            <form method="post" action="{{ url_for('admin_ad_action',ad_id=a.id,action='reject') }}"><button class="btn btn-danger small">رد</button></form>
+            {% else %}<span class="status-badge">{{ a.status }}</span>{% endif %}
+          </div>
+        </div>
+        {% else %}<div class="empty-state">تبلیغی وجود ندارد.</div>{% endfor %}
+      </section>
+
+      <section id="home-slides" class="panel-card">
+        <div class="panel-title">
+          <div><h2><span class="title-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m6 16 4-4 3 3 3-4 2 2"/></svg></span>مدیریت اسلایدر صفحه اصلی</h2><p class="muted">مدیر می‌تواند عنوان، توضیح، شهر، تصویر، ترتیب و وضعیت هر اسلاید را تغییر دهد.</p></div>
+        </div>
+
+        <form class="form-card admin-slide-form" method="post" action="{{ url_for('admin_home_slide_create') }}" enctype="multipart/form-data">
+          <h3><span class="title-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>افزودن اسلاید جدید</h3>
+          <div class="form-two">
+            <label>عنوان<input name="title" required placeholder="هر سفر، یک خاطره ماندگار"></label>
+            <label>زیرعنوان<input name="subtitle" placeholder="اقامتگاه‌های متنوع در کل خوزستان"></label>
+          </div>
+          <div class="form-three">
+            <label>برچسب شهر<input name="city_label" value="خوزستان"></label>
+            <label>ترتیب<input type="number" name="sort_order" value="10" min="1"></label>
+            <label>تصویر<input type="file" name="image" accept=".jpg,.jpeg,.png,.webp"></label>
+            <label>لینک اسلایدر<select name="target_type"><option value="none">بدون لینک</option><option value="listing">لینک به اقامتگاه</option><option value="external">لینک خارجی</option></select></label>
+          </div>
+          <div class="form-two"><label>اقامتگاه مقصد<select name="target_listing_id"><option value="">انتخاب اقامتگاه</option>{% for l in published_listings %}<option value="{{ l.id }}">{{ l.title }}</option>{% endfor %}</select></label><label>لینک خارجی<input name="external_url" placeholder="https://..."></label></div>
+          <label class="consent-check"><input type="checkbox" name="is_active" value="1" checked><span>اسلاید فعال باشد</span></label>
+          <button class="btn btn-primary" type="submit">افزودن اسلاید</button>
+        </form>
+
+        {% for s in home_slides %}
+        <div class="admin-slide-edit">
+          <form method="post" action="{{ url_for('admin_home_slide_update',slide_id=s.id) }}" enctype="multipart/form-data">
+            <div class="slide-row">
+              {% if s.image_filename %}
+                <img class="slide-preview" src="{{ url_for('static',filename=s.image_filename if s.image_filename.startswith('images/') else 'uploads/'~s.image_filename) }}" alt="">
+              {% else %}
+                <div class="slide-preview" style="display:grid;place-items:center;background:#eaf8f1;color:#078f5b">بدون تصویر</div>
+              {% endif %}
+
+              <div class="slide-fields">
+                <div class="slide-fields-grid">
+                  <label>عنوان<input type="text" name="title" value="{{ s.title }}" required></label>
+                  <label>زیرعنوان<input type="text" name="subtitle" value="{{ s.subtitle or '' }}"></label>
+                  <label>ترتیب<input type="number" name="sort_order" value="{{ s.sort_order }}" min="1"></label>
+                </div>
+                <div class="slide-fields-grid" style="margin-top:8px">
+                  <label>شهر<input type="text" name="city_label" value="{{ s.city_label or 'خوزستان' }}"></label>
+                  <label>تصویر جدید<input type="file" name="image" accept=".jpg,.jpeg,.png,.webp"></label>
+                  <label>لینک<select name="target_type"><option value="none" {% if s.target_type=='none' or not s.target_type %}selected{% endif %}>بدون لینک</option><option value="listing" {% if s.target_type=='listing' %}selected{% endif %}>اقامتگاه</option><option value="external" {% if s.target_type=='external' %}selected{% endif %}>خارجی</option></select></label>
+                  <label>اقامتگاه مقصد<select name="target_listing_id"><option value="">انتخاب اقامتگاه</option>{% for l in published_listings %}<option value="{{ l.id }}" {% if s.target_listing_id==l.id %}selected{% endif %}>{{ l.title }}</option>{% endfor %}</select></label>
+                  <label>لینک خارجی<input name="external_url" value="{{ s.external_url or '' }}" placeholder="https://..."></label>
+                  <label class="consent-check" style="padding-top:28px"><input type="checkbox" name="is_active" value="1" {% if s.is_active %}checked{% endif %}><span>{{ 'فعال' if s.is_active else 'خاموش' }}</span></label>
+                </div>
+                <div class="slide-actions" style="margin-top:10px">
+                  <button class="btn btn-primary small" type="submit">ذخیره تغییرات</button>
+                  <a class="btn btn-outline small" href="{{ url_for('index') }}">مشاهده صفحه اصلی</a>
+                </div>
+              </div>
+            </div>
+          </form>
+          <div class="slide-actions" style="margin-top:8px">
+            <form method="post" action="{{ url_for('admin_home_slide_toggle',slide_id=s.id) }}"><button class="btn btn-outline small">{{ 'خاموش کردن' if s.is_active else 'فعال کردن' }}</button></form>
+            <form method="post" action="{{ url_for('admin_home_slide_delete',slide_id=s.id) }}" onsubmit="return confirm('این اسلاید حذف شود؟')"><button class="btn btn-danger small">حذف اسلاید</button></form>
+          </div>
+        </div>
+        {% else %}
+        <div class="empty-state">اسلایدی ثبت نشده است.</div>
+        {% endfor %}
+      </section>
+<section id="support" class="panel-card">
+        <div class="panel-title"><h2><span class="title-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg></span>تیکت‌های پشتیبانی</h2></div>
+        {% for t in tickets %}
+        <div class="support-admin-ticket">
+          <div class="table-row">
+            <div><strong>#{{ t.id }} · {{ t.subject }}</strong><small>{{ t.full_name }} · {{ t.category }} · {{ t.created_at }}</small></div>
+            <div class="inline-actions">
+              <span class="status-badge">{{ 'باز' if t.status=='open' else 'بسته' }}</span>
+              {% if t.priority=='high' %}<span class="priority-badge">مهم</span>{% endif %}
+              <form method="post" action="{{ url_for('admin_ticket_action',ticket_id=t.id,action='close' if t.status!='closed' else 'open') }}"><button class="btn btn-outline small">{{ 'بستن' if t.status!='closed' else 'بازکردن' }}</button></form>
+            </div>
+          </div>
+          <form method="post" action="{{ url_for('admin_ticket_reply',ticket_id=t.id) }}" class="support-reply-form">
+            <input name="body" placeholder="پاسخ به این تیکت..." required>
+            <button class="btn btn-primary small">ارسال پاسخ</button>
+          </form>
+        </div>
+        {% else %}<div class="empty-state">تیکتی وجود ندارد.</div>{% endfor %}
+      </section>
+
+      <section id="users" class="panel-card">
+        <div class="panel-title"><h2><span class="title-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 21c.5-4 2.7-6 6-6s5.5 2 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.8M17 15c2.3.4 3.7 2 4 4"/></svg></span>کاربران</h2></div>
+        {% for u in users %}
+        <div class="table-row">
+          <div><strong>{{ u.full_name }}</strong><small>{{ u.mobile }} · {{ u.email or 'بدون ایمیل' }} · {{ u.role }}</small></div>
+          {% if u.role!='admin' %}
+          <form method="post" action="{{ url_for('admin_user_action',user_id=u.id,action='deactivate' if u.is_active else 'activate') }}"><button class="btn btn-outline small">{{ 'غیرفعال' if u.is_active else 'فعال' }}</button></form>
+          <form method="post" action="{{ url_for('admin_identity_toggle',user_id=u.id) }}"><button class="btn btn-outline small">{{ '✓ هویت تأییدشده' if u.identity_verified else 'تأیید هویت' }}</button></form>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </section>
+          <section id="finance" class="panel-card">
+        <div class="panel-title"><h2>💳 تراکنش‌ها و وضعیت مالی</h2></div>
+        {% for p in payments %}
+        <div class="table-row"><div><strong>#{{p.id}} · {{p.kind}}</strong><small>{{p.full_name}} · {{'{:,}'.format(p.amount)}} تومان · {{p.created_at}}</small></div><span class="status-badge">{{p.status}}</span></div>
+        {% else %}<div class="empty-state">تراکنشی وجود ندارد.</div>{% endfor %}
+      </section>
+      <section id="coupons" class="panel-card">
+        <div class="panel-title"><h2>🎫 کدهای تخفیف</h2></div>
+        <form method="post" action="{{ url_for('admin_coupon_save') }}" class="form-four">
+          <label>کد تخفیف<input name="code" placeholder="JAKO20" required></label>
+          <label>درصد<input name="percent" type="number" min="1" max="100" required></label>
+          <label>حداکثر استفاده<input name="max_uses" type="number" min="0" value="0"></label>
+          <label>انقضا<input name="expires_at" type="datetime-local"></label>
+          <button class="btn btn-primary">ذخیره</button>
+        </form>
+        {% for c in coupons %}<div class="table-row"><div><strong>{{c.code}}</strong><small>{{c.percent}}٪ · {{c.used_count}} استفاده{% if c.expires_at %} · تا {{c.expires_at}}{% endif %}</small></div><form method="post" action="{{ url_for('admin_coupon_toggle',coupon_id=c.id) }}"><button class="btn btn-outline small">{{'غیرفعال' if c.is_active else 'فعال'}}</button></form></div>{% endfor %}
+      </section>
+      <section id="reports" class="panel-card">
+        <div class="panel-title"><h2>⚠️ گزارش آگهی‌ها <span class="status-badge">{{ counts.pending_reports }} در انتظار</span></h2></div>
+        {% for r in reports %}
+        <div class="table-row">
+          <div><strong>{{ r.listing_title }}</strong><small>{{ r.reporter_name }} · {{ r.reason }} · {{ r.created_at }}</small>{% if r.details %}<small>{{ r.details }}</small>{% endif %}</div>
+          <div class="inline-actions">
+            <span class="status-badge">{{ r.status }}</span>
+            {% if r.status=='pending' %}
+              <form method="post" action="{{ url_for('admin_report_action',report_id=r.id,action='resolve') }}"><button class="btn btn-success small">رسیدگی شد</button></form>
+              <form method="post" action="{{ url_for('admin_report_action',report_id=r.id,action='reject') }}"><button class="btn btn-outline small">رد گزارش</button></form>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}<div class="empty-state">گزارشی ثبت نشده است.</div>{% endfor %}
+      </section>
+
+      <section id="categories" class="panel-card">
+        <div class="panel-title"><h2>🗂️ مدیریت دسته‌بندی‌ها</h2></div>
+        <form method="post" action="{{ url_for('admin_category_save') }}" class="form-card">
+          <div class="form-four">
+            <label>نام<input name="name" required></label>
+            <label>Slug<input name="slug"></label>
+            <label>ترتیب<input name="sort_order" type="number" value="0"></label>
+            <label>دسته والد<select name="parent_id"><option value="">بدون والد</option>{% for c in categories %}<option value="{{c.id}}">{{c.name}}</option>{% endfor %}</select></label>
+          </div>
+          <label>SVG آیکون<textarea name="icon_svg" rows="2" placeholder="<svg ...>...</svg>"></textarea></label>
+          <label><input type="checkbox" name="is_active" value="1" checked> فعال</label>
+          <button class="btn btn-primary">افزودن دسته</button>
+        </form>
+        {% for c in categories %}
+        <form method="post" action="{{ url_for('admin_category_save') }}" class="table-row" style="gap:8px;flex-wrap:wrap;align-items:end">
+          <input type="hidden" name="id" value="{{c.id}}">
+          <label>نام<input name="name" value="{{c.name}}" required></label>
+          <label>Slug<input name="slug" value="{{c.slug}}"></label>
+          <label>ترتیب<input name="sort_order" type="number" value="{{c.sort_order}}"></label>
+          <label>SVG<input name="icon_svg" value="{{c.icon_svg|e}}"></label>
+          <label>فعال<select name="is_active"><option value="1" {% if c.is_active %}selected{% endif %}>فعال</option><option value="0" {% if not c.is_active %}selected{% endif %}>غیرفعال</option></select></label>
+          <button class="btn btn-primary small">ویرایش</button>
+          <button class="btn btn-danger small" type="button" onclick="document.getElementById('delcat{{c.id}}').submit()">حذف</button>
+        </form>
+        <form id="delcat{{c.id}}" method="post" action="{{ url_for('admin_category_delete',category_id=c.id) }}" onsubmit="return confirm('حذف دسته‌بندی؟')"></form>
+        {% endfor %}
+      </section>
+
+      <section id="cities" class="panel-card">
+        <div class="panel-title"><h2>📍 مدیریت شهرها</h2></div>
+        <form method="post" action="{{ url_for('admin_city_save') }}" class="form-four">
+          <label>استان<input name="province" value="خوزستان"></label>
+          <label>شهر<input name="name" required></label>
+          <label>منطقه/ناحیه<input name="area"></label>
+          <button class="btn btn-primary">افزودن شهر</button>
+        </form>
+        <div class="table-list">{% for c in cities %}<div class="table-row"><div><strong>{{c.name}}</strong><small>{{c.province}}{% if c.area %} · {{c.area}}{% endif %}</small></div><form method="post" action="{{ url_for('admin_city_toggle',city_id=c.id) }}"><button class="btn btn-outline small">{{ 'غیرفعال' if c.is_active else 'فعال' }}</button></form></div>{% endfor %}</div>
+      </section>
+
+      <section id="app-settings" class="panel-card">
+  <div class="panel-title"><div><h2>📱 اپلیکیشن، PWA و بنر تبلیغاتی</h2><p class="muted">نام، آیکون، رنگ برنامه، نصب PWA و بنر سبز صفحه اصلی را از همین‌جا مدیریت کن.</p></div></div>
+  <form method="post" action="{{ url_for('admin_app_settings_save') }}" enctype="multipart/form-data" class="form-card">
+    <h3>ظاهر اپلیکیشن</h3>
+    <div class="form-two">
+      <label>نام برنامه<input name="app_name" value="{{ app_settings.get('app_name','جاکو') }}" required></label>
+      <label>نام کوتاه برنامه<input name="app_short_name" value="{{ app_settings.get('app_short_name','جاکو') }}"></label>
+    </div>
+    <div class="form-three">
+      <label>رنگ اصلی برنامه<input type="color" name="app_theme_color" value="{{ app_settings.get('app_theme_color','#087d50') }}"></label>
+      <label>آیکون جدید (ترجیحاً PNG مربعی)<input type="file" name="app_icon_file" accept=".png,.jpg,.jpeg,.webp"></label>
+      <div class="pwa-admin-preview">
+        <span>آیکون فعلی</span>
+        <img src="{{ url_for('static',filename=app_settings.get('app_icon','images/placeholder.svg')) }}" alt="">
+      </div>
+    </div>
+    <div class="pwa-info-box">بعد از ذخیره، نام و آیکون در PWA و هنگام نصب برنامه استفاده می‌شود. برای APK نیز این تنظیمات به‌عنوان تنظیمات ظاهری وب‌اپ آماده هستند.</div>
+
+    <h3>اعلان Push</h3>
+    <label>VAPID Public Key <input name="push_vapid_public_key" value="{{ app_settings.get('push_vapid_public_key','') }}" placeholder="اگر Push واقعی سروری می‌خواهی، کلید عمومی VAPID را وارد کن."></label>
+    <div class="pwa-info-box">کاربر می‌تواند از داخل سایت اجازه اعلان بدهد. برای ارسال Push واقعی از سرور، علاوه بر این کلید باید کلید خصوصی VAPID روی سرور نگهداری شود.</div>
+
+    <h3>بنر تبلیغاتی سبز صفحه اصلی</h3>
+    <label class="consent-check"><input type="checkbox" name="home_banner_enabled" value="1" {% if app_settings.get('home_banner_enabled','1')=='1' %}checked{% endif %}><span>بنر نمایش داده شود</span></label>
+    <div class="form-two">
+      <label>عنوان بنر<input name="home_banner_title" value="{{ app_settings.get('home_banner_title','اقامتگاهت را بیشتر دیده شو!') }}"></label>
+      <label>متن بنر<input name="home_banner_text" value="{{ app_settings.get('home_banner_text','تبلیغ قابل کلیک بساز و کاربران را مستقیم به صفحه اقامتگاهت هدایت کن.') }}"></label>
+    </div>
+    <div class="form-three">
+      <label>متن دکمه<input name="home_banner_button" value="{{ app_settings.get('home_banner_button','شروع تبلیغ') }}"></label>
+      <label>مقصد بنر<select name="home_banner_target_type">
+        <option value="ads" {% if app_settings.get('home_banner_target_type','ads')=='ads' %}selected{% endif %}>صفحه تبلیغات جاکو</option>
+        <option value="listing" {% if app_settings.get('home_banner_target_type')=='listing' %}selected{% endif %}>یک آگهی جاکو</option>
+        <option value="external" {% if app_settings.get('home_banner_target_type')=='external' %}selected{% endif %}>لینک خارجی</option>
+      </select></label>
+      <label>عکس بنر<input type="file" name="home_banner_image" accept=".jpg,.jpeg,.png,.webp"></label>
+    </div>
+    <div class="form-two">
+      <label>آگهی جاکو<select name="home_banner_listing_id"><option value="">انتخاب آگهی</option>{% for l in published_listings %}<option value="{{ l.id }}" {% if app_settings.get('home_banner_listing_id')|int==l.id %}selected{% endif %}>{{ l.title }}</option>{% endfor %}</select></label>
+      <label>لینک خارجی<input name="home_banner_external_url" value="{{ app_settings.get('home_banner_external_url','') }}" placeholder="https://example.com"></label>
+    </div>
+    <button class="btn btn-primary" type="submit">ذخیره تنظیمات اپ و بنر</button>
+  </form>
+</section>
+<section id="content-management" class="panel-card">
+        <div class="panel-title"><h2>📝 مدیریت متن صفحات</h2></div>
+        {% for key,label in [('terms','قوانین و مقررات'),('privacy','حریم خصوصی')] %}
+        <form method="post" action="{{ url_for('admin_content_save',key=key) }}" class="form-card" style="margin-bottom:12px">
+          <h3>{{label}}</h3>
+          <input name="title" value="{{ label }} اپلیکیشن جاکو" required>
+          <textarea name="body" rows="7" placeholder="متن صفحه...">{{ content.get(key,'') }}</textarea>
+          <button class="btn btn-primary">ذخیره {{label}}</button>
+        </form>
+        {% endfor %}
+      </section>
+</main>
+  </div>
+</div>
+{% endblock %}

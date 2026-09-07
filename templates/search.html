@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}جستجو | جاکو{% endblock %}
+{% macro listing_image(listing) -%}
+    {% if listing.images and listing.images|length %}
+        {{ url_for('static', filename='uploads/' ~ listing.images[0].filename) }}
+    {% else %}
+        {{ url_for('static', filename='images/placeholder.jpg') }}
+    {% endif %}
+{%- endmacro %}
+
+{% block content %}
+<section class="search-page container">
+    <div class="search-page-head">
+        <div>
+            <span class="eyebrow">جاکو</span>
+            <h1>مورد مناسب برای اجاره رو پیدا کن</h1>
+            <p>{{ listings|length }} آگهی برای نمایش پیدا شد.</p>
+        </div>
+    </div>
+
+    <form class="smart-search-box" method="get" action="{{ url_for('search') }}"><input name="q" value="{{ text_query or '' }}" placeholder="مثلاً: ویلای استخردار برای ۶ نفر نزدیک دریا زیر ۵ میلیون"><button class="btn btn-primary">🔍 جستجو</button></form>
+<form class="filter-bar category-filter-form" method="get" action="{{ url_for('search') }}">
+  <div class="filter-basic">
+    <input name="city" value="{{ city or '' }}" placeholder="شهر">
+    <input name="area" value="{{ area or '' }}" placeholder="منطقه">
+    <select name="category" id="category-filter">
+      <option value="">همه دسته‌بندی‌ها</option>
+      {% for c in categories %}<option value="{{ c.slug }}" {% if category==c.slug %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select>
+    <input name="min_price" value="{{ min_price or '' }}" type="number" min="0" placeholder="حداقل قیمت">
+    <input name="max_price" value="{{ max_price or '' }}" type="number" min="0" placeholder="حداکثر قیمت">
+    <input name="min_rating" value="{{ min_rating or '' }}" type="number" min="0" max="5" step=".1" placeholder="حداقل امتیاز">
+    <input class="jalali-input" data-target="search_check_in" value="{{ check_in_j or '' }}" placeholder="ورود شمسی" readonly>
+    <input type="hidden" id="search_check_in" name="check_in" value="{{ check_in_j or '' }}">
+    <input class="jalali-input" data-target="search_check_out" value="{{ check_out_j or '' }}" placeholder="خروج شمسی" readonly>
+    <input type="hidden" id="search_check_out" name="check_out" value="{{ check_out_j or '' }}">
+    <select name="sort"><option value="best" {% if sort=='best' %}selected{% endif %}>بهترین تطابق</option><option value="cheap" {% if sort=='cheap' %}selected{% endif %}>ارزان‌ترین</option><option value="expensive" {% if sort=='expensive' %}selected{% endif %}>گران‌ترین</option><option value="rating" {% if sort=='rating' %}selected{% endif %}>بهترین امتیاز</option><option value="popular" {% if sort=='popular' %}selected{% endif %}>محبوب‌ترین</option><option value="newest" {% if sort=='newest' %}selected{% endif %}>جدیدترین</option></select>
+  </div>
+
+  <div id="category-specific-filters" class="category-specific-filters">
+    <div class="category-filter-panel" data-category="stay,villa,ecotourism,suite,apartment,furnished,cabin">
+      <strong>🏠 فیلترهای اقامتگاه</strong>
+      <input name="guests" value="{{ guests or '' }}" type="number" min="1" placeholder="حداقل مهمان">
+      <input name="stay_type" value="{{ detail_filters.get('stay_type','') }}" placeholder="نوع اقامتگاه (ویلا، آپارتمان...)">
+      <input name="stay_bedrooms_min" value="{{ detail_filters.get('stay_bedrooms_min','') }}" type="number" min="0" placeholder="حداقل خواب">
+      <input name="stay_bathrooms_min" value="{{ detail_filters.get('stay_bathrooms_min','') }}" type="number" min="0" placeholder="حداقل حمام">
+      <input name="stay_capacity_min" value="{{ detail_filters.get('stay_capacity_min','') }}" type="number" min="1" placeholder="حداقل ظرفیت مهمان">
+      <input name="stay_amenities" value="{{ detail_filters.get('stay_amenities','') }}" placeholder="امکانات (مثلاً استخر)">
+    </div>
+
+    <div class="category-filter-panel" data-category="car">
+      <strong>🚗 فیلترهای اجاره ماشین</strong>
+      <input name="brand" value="{{ detail_filters.get('brand','') }}" placeholder="برند">
+      <input name="model" value="{{ detail_filters.get('model','') }}" placeholder="مدل">
+      <input name="year_min" value="{{ detail_filters.get('year_min','') }}" type="number" placeholder="حداقل سال">
+      <select name="gearbox"><option value="">گیربکس</option><option {% if detail_filters.get('gearbox')=='اتومات' %}selected{% endif %}>اتومات</option><option {% if detail_filters.get('gearbox')=='دستی' %}selected{% endif %}>دستی</option></select>
+      <input name="fuel" value="{{ detail_filters.get('fuel','') }}" placeholder="سوخت (بنزینی، هیبرید...)">
+      <input name="kilometers_max" value="{{ detail_filters.get('kilometers_max','') }}" type="number" min="0" placeholder="حداکثر کارکرد">
+      <input name="insurance" value="{{ detail_filters.get('insurance','') }}" placeholder="بیمه">
+    </div>
+
+    <div class="category-filter-panel" data-category="equipment">
+      <strong>🧰 فیلترهای تجهیزات و لوازم</strong>
+      <input name="device_type" value="{{ detail_filters.get('device_type','') }}" placeholder="نوع دستگاه">
+      <input name="equipment_type" value="{{ detail_filters.get('equipment_type','') }}" placeholder="نوع تجهیزات">
+      <input name="storage" value="{{ detail_filters.get('storage','') }}" placeholder="حافظه / فضا">
+      <input name="item_condition" value="{{ detail_filters.get('item_condition','') }}" placeholder="وضعیت (نو، کارکرده...)">
+      <input name="quantity_min" value="{{ detail_filters.get('quantity_min','') }}" type="number" min="1" placeholder="حداقل تعداد">
+    </div>
+
+    <div class="category-filter-panel" data-category="gaming">
+      <strong>🎮 فیلترهای لوازم گیمینگ</strong>
+      <input name="brand" value="{{ detail_filters.get('brand','') }}" placeholder="برند">
+      <input name="model" value="{{ detail_filters.get('model','') }}" placeholder="مدل">
+      <input name="device_type" value="{{ detail_filters.get('device_type','') }}" placeholder="نوع دستگاه / کنسول">
+      <input name="storage" value="{{ detail_filters.get('storage','') }}" placeholder="حافظه">
+      <input name="item_condition" value="{{ detail_filters.get('item_condition','') }}" placeholder="وضعیت">
+      <input name="included_items" value="{{ detail_filters.get('included_items','') }}" placeholder="لوازم همراه">
+    </div>
+
+    <div class="category-filter-panel" data-category="camera">
+      <strong>📷 فیلترهای دوربین و تصویربرداری</strong>
+      <input name="brand" value="{{ detail_filters.get('brand','') }}" placeholder="برند">
+      <input name="model" value="{{ detail_filters.get('model','') }}" placeholder="مدل">
+      <input name="camera_type" value="{{ detail_filters.get('camera_type','') }}" placeholder="نوع دوربین">
+      <input name="megapixels_min" value="{{ detail_filters.get('megapixels_min','') }}" type="number" min="0" step=".1" placeholder="حداقل مگاپیکسل">
+      <input name="lens" value="{{ detail_filters.get('lens','') }}" placeholder="لنز">
+      <input name="camera_storage" value="{{ detail_filters.get('camera_storage','') }}" placeholder="حافظه دوربین">
+      <input name="camera_accessories" value="{{ detail_filters.get('camera_accessories','') }}" placeholder="لوازم جانبی">
+    </div>
+
+    <div class="category-filter-panel" data-category="events">
+      <strong>🎉 فیلترهای جشن و مراسم</strong>
+      <input name="equipment_type" value="{{ detail_filters.get('equipment_type','') }}" placeholder="نوع تجهیزات">
+      <input name="item_condition" value="{{ detail_filters.get('item_condition','') }}" placeholder="وضعیت">
+      <input name="quantity_min" value="{{ detail_filters.get('quantity_min','') }}" type="number" min="1" placeholder="حداقل تعداد">
+      <input name="included_items" value="{{ detail_filters.get('included_items','') }}" placeholder="لوازم همراه">
+    </div>
+
+    <div class="category-filter-panel" data-category="camp">
+      <strong>🏕️ فیلترهای کمپ و سفر</strong>
+      <input name="equipment_type" value="{{ detail_filters.get('equipment_type','') }}" placeholder="نوع تجهیزات">
+      <input name="item_condition" value="{{ detail_filters.get('item_condition','') }}" placeholder="وضعیت">
+      <input name="quantity_min" value="{{ detail_filters.get('quantity_min','') }}" type="number" min="1" placeholder="حداقل تعداد">
+      <input name="included_items" value="{{ detail_filters.get('included_items','') }}" placeholder="لوازم همراه">
+    </div>
+
+    <div class="category-filter-panel" data-category="sport">
+      <strong>⚽ فیلترهای ورزش و تفریح</strong>
+      <input name="equipment_type" value="{{ detail_filters.get('equipment_type','') }}" placeholder="نوع وسیله / تجهیزات">
+      <input name="brand" value="{{ detail_filters.get('brand','') }}" placeholder="برند">
+      <input name="model" value="{{ detail_filters.get('model','') }}" placeholder="مدل">
+      <input name="item_condition" value="{{ detail_filters.get('item_condition','') }}" placeholder="وضعیت">
+      <input name="quantity_min" value="{{ detail_filters.get('quantity_min','') }}" type="number" min="1" placeholder="حداقل تعداد">
+    </div>
+  </div>
+  <div class="filter-checks"><label><input type="checkbox" name="verified" value="1" {% if verified %}checked{% endif %}> تأییدشده</label><label><input type="checkbox" name="instant_book" value="1" {% if instant %}checked{% endif %}> رزرو فوری</label><label><input type="checkbox" name="pets" value="1" {% if pets %}checked{% endif %}> حیوان خانگی</label><label><input type="checkbox" name="party" value="1" {% if party %}checked{% endif %}> مهمانی مجاز</label><label><input type="checkbox" name="parking" value="1" {% if parking %}checked{% endif %}> پارکینگ</label><label><input type="checkbox" name="pool" value="1" {% if pool %}checked{% endif %}> استخر</label></div><button class="btn btn-primary" type="submit">🔍 اعمال فیلتر</button>
+</form>
+
+    <section class="map-search-card"><div class="panel-title"><div><h2>🗺️ نقشه تعاملی</h2><p class="muted">قیمت‌ها را روی نقشه ببین و برای مشاهده جزئیات لمس کن.</p></div><button type="button" class="btn btn-outline small" id="map-area-search">🔎 جستجو در این محدوده</button></div><div id="search-map"></div></section>
+    <div class="listing-grid search-grid">
+        {% for listing in listings %}
+        <article class="listing-card">
+            <a href="{{ url_for('listing_detail', listing_id=listing.id) }}" class="listing-photo">
+                <img src="{{ listing_image(listing) }}" alt="{{ listing.title }}">
+                <span class="favorite-badge">♡</span>
+                <span class="rating-badge">★ {{ listing.rating }}</span>
+            </a>
+            <div class="listing-body">
+                <h3><a href="{{ url_for('listing_detail', listing_id=listing.id) }}">{{ listing.title }}</a></h3>
+                <p class="muted">{{ listing.city }}{% if listing.area %}، {{ listing.area }}{% endif %}</p>
+                <div class="card-meta">{{ listing.bedrooms }} خواب · {{ listing.bathrooms }} حمام · تا {{ listing.max_guests }} مهمان</div>
+                <div class="price">{{ "{:,}".format(listing.price_per_night) }} <small>تومان / شب</small></div>
+            </div>
+        </article>
+        {% else %}
+        <div class="empty-state wide">
+            <div class="empty-icon">⌕</div>
+            <h3>آگهی‌ای پیدا نشد</h3>
+            <p>فیلترها را کمی تغییر دهید و دوباره جستجو کنید.</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""><style>.mobile-filter-trigger{display:none}.filter-sheet{position:relative}.sheet-head,.sheet-handle{display:none}.bottom-sheet-backdrop{display:none}.smart-search-box{display:flex;gap:10px;margin:15px 0}.smart-search-box input{flex:1;border:1px solid var(--line);border-radius:13px;padding:12px}.map-search-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin:16px 0}.map-search-card .panel-title{display:flex;justify-content:space-between;align-items:center}.map-search-card h2{margin:0;font-size:17px}.map-search-card p{margin:4px 0}.map-search-card #search-map{height:360px;border-radius:15px;overflow:hidden;margin-top:10px}.map-price{font-weight:900;color:#087d50}.map-preview{min-width:170px}@media(max-width:600px){.mobile-filter-trigger{display:inline-flex;margin:8px 0}.bottom-sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99998}.bottom-sheet-backdrop:not([hidden]){display:block}.filter-sheet{position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#fff;border-radius:24px 24px 0 0;padding:12px 14px 25px;max-height:82vh;overflow:auto;transform:translateY(110%);transition:.25s;box-shadow:0 -10px 40px rgba(0,0,0,.16)}.filter-sheet.open{transform:translateY(0)}.sheet-handle{display:block;width:42px;height:4px;border-radius:9px;background:#d8dfdc;margin:2px auto 12px}.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.sheet-head button{border:0;background:#f1f4f2;border-radius:50%;width:32px;height:32px;font-size:20px}.smart-search-box{flex-direction:column}.map-search-card #search-map{height:300px}}.category-filter-form{display:block}.filter-checks{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.filter-checks label{background:#fff;border:1px solid var(--line);padding:9px 11px;border-radius:11px;font-size:11px}.jalali-input{cursor:pointer}.filter-basic,.category-filter-panel{display:flex;flex-wrap:wrap;gap:10px}.filter-basic{margin-bottom:10px}.category-specific-filters{margin-bottom:10px}.category-filter-panel{display:none;background:#f8faf9;border:1px solid var(--line);border-radius:14px;padding:12px;align-items:center}.category-filter-panel strong{width:100%;display:block;margin-bottom:2px}.category-filter-panel input,.category-filter-panel select,.filter-basic input,.filter-basic select{border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff;min-width:150px}.category-filter-panel.active{display:flex}@media(max-width:600px){.category-filter-panel input,.category-filter-panel select,.filter-basic input,.filter-basic select{width:100%}}</style>{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/jalali.js') }}"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script>
+document.addEventListener('DOMContentLoaded',function(){
+ const el=document.getElementById('search-map'); if(!el||typeof L==='undefined')return;
+ const items={{ listings|map(attribute='id')|list|tojson }};
+ const data=[{% for l in listings if l.latitude is not none and l.longitude is not none %}{id:{{l.id}},lat:{{l.latitude}},lng:{{l.longitude}},title:{{l.title|tojson}},price:{{l.price_per_night|default(0)|int}},city:{{l.city|tojson}}},{% endfor %}];
+ const map=L.map(el).setView([32.4,48.7],8); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+ const bounds=[]; data.forEach(x=>{const m=L.marker([x.lat,x.lng]).addTo(map);m.bindPopup('<div class="map-preview"><strong>'+x.title+'</strong><br><span>'+x.city+'</span><br><span class="map-price">'+Number(x.price).toLocaleString('fa-IR')+' تومان / شب</span><br><a href="/listing/'+x.id+'">مشاهده آگهی ←</a></div>');bounds.push([x.lat,x.lng]);}); if(bounds.length)map.fitBounds(bounds,{padding:[25,25]});
+ document.getElementById('map-area-search')?.addEventListener('click',()=>{const b=map.getBounds();const visible=data.filter(x=>b.contains([x.lat,x.lng]));alert('در این محدوده '+visible.length+' آگهی روی نقشه وجود دارد.');});
+});
+</script><script>
+document.addEventListener('DOMContentLoaded',()=>{const sheet=document.getElementById('filter-sheet'),back=document.getElementById('filter-backdrop');const open=()=>{sheet.classList.add('open');back.hidden=false},close=()=>{sheet.classList.remove('open');back.hidden=true};document.getElementById('open-filters')?.addEventListener('click',open);document.getElementById('close-filters')?.addEventListener('click',close);back?.addEventListener('click',close);});
+</script><script>
+document.addEventListener('DOMContentLoaded',function(){
+ const select=document.getElementById('category-filter');
+ const panels=document.querySelectorAll('.category-filter-panel');
+ function showPanel(){
+   const cat=select?.value||'';
+   panels.forEach(p=>{
+     const active=!!cat && p.dataset.category.split(',').includes(cat);
+     p.classList.toggle('active',active);
+     p.querySelectorAll('input,select').forEach(el=>el.disabled=!active);
+   });
+ }
+ select?.addEventListener('change',showPanel); showPanel();
+});
+</script>{% endblock %}

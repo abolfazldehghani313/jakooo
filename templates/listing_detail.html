@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}{{ listing.title }} | جاکو{% endblock %}
+{% block head %}
+<meta name="description" content="{{ listing.seo_description or listing.description or (listing.title ~ ' | جاکو') }}"><meta property="og:title" content="{{ listing.seo_title or listing.title }}"><meta property="og:description" content="{{ listing.seo_description or listing.description or 'اجاره در جاکو' }}"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<style>
+.map-actions{margin:14px 0 0;display:flex;gap:8px;flex-wrap:wrap}.map-actions .btn{flex:1;min-width:180px}
+#detail-map{height:320px;border-radius:18px;margin-top:14px;border:1px solid #dfe8e3}
+.contact-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.contact-actions .btn{width:100%}
+.owner-card{margin-top:13px;padding:13px 15px;border:1px solid var(--line);border-radius:15px;background:#f9fbfa}.owner-main{display:flex;align-items:center;justify-content:space-between;gap:12px}.owner-profile{display:flex;align-items:center;gap:11px}.owner-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;background:#eaf8f1;color:var(--green-dark);display:grid;place-items:center;font-weight:900}.owner-avatar img{width:100%;height:100%;object-fit:cover}.trust-mini{display:flex;gap:5px;flex-wrap:wrap}.trust-mini span{font-size:9px;padding:4px 6px;border-radius:8px;background:#eef8f3;color:var(--green-dark)}.owner-name{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.owner-phone{font-size:11px;color:var(--muted);margin-top:4px}.verified-badge{font-size:10px;background:#eaf8f1;color:var(--green-dark);padding:3px 7px;border-radius:8px}.detail-specs{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:15px}.detail-spec{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fbfcfb}.detail-spec small{display:block;color:var(--muted);font-size:10px}.detail-spec strong{display:block;margin-top:2px;font-size:12px}.location-caption{font-size:11px;color:var(--muted);margin-top:8px}
+.review-dimensions{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}.review-dimensions label{font-size:10px;color:var(--muted)}.review-dimensions select{width:100%;margin-top:5px;padding:8px;border:1px solid var(--line);border-radius:9px}.review-dimension-summary{display:flex;gap:5px;flex-wrap:wrap;margin:7px 0}.review-dimension-summary span{font-size:9px;background:#f4f7f5;border-radius:8px;padding:4px 6px;color:#56635e}.price-drop-alert{background:#fff8df;border:1px solid #f1df9a;color:#7d6410;border-radius:12px;padding:10px;font-size:11px;margin-bottom:10px}@media(max-width:600px){.review-dimensions{grid-template-columns:repeat(2,1fr)}.detail-specs{grid-template-columns:repeat(2,1fr)}.contact-actions{grid-template-columns:1fr}.map-actions .btn{min-width:100%}}
+
+.phone-reveal{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px 13px;border:1px solid #cfe9dc;background:#f3fbf7;border-radius:15px}.phone-reveal-icon{width:38px;height:38px;border-radius:12px;background:#dff5e9;color:var(--green);display:grid;place-items:center;font-size:19px;flex:0 0 38px}.phone-reveal-content{min-width:0;flex:1}.phone-reveal-content small{display:block;color:var(--muted);font-size:9px}.phone-reveal-content strong{display:block;color:#183b2f;font-size:15px;direction:ltr;text-align:right;margin-top:1px}.phone-call-btn{padding:8px 15px!important;min-width:66px!important}.contact-reveal-btn{cursor:pointer}.btn-disabled{background:#eef2f0!important;color:#8a9691!important;border:1px solid #e1e7e4!important;pointer-events:none}
+@media(max-width:600px){.phone-reveal{padding:10px}.phone-reveal-content strong{font-size:14px}.phone-call-btn{min-width:60px!important}}
+</style>
+{% endblock %}
+{% macro img_url(image) -%}{{ url_for('static', filename='uploads/' ~ image.filename) }}{%- endmacro %}
+{% block content %}
+<section class="container detail-page">
+    <div class="detail-gallery">
+        {% if listing.images and listing.images|length %}
+            {% for image in listing.images[:5] %}
+                <img src="{{ img_url(image) }}" alt="{{ listing.title }}">
+            {% endfor %}
+        {% else %}
+            <div class="gallery-placeholder">⌂</div>
+        {% endif %}
+    </div>
+
+    <div class="detail-layout">
+        <article>
+            <div class="detail-title-row">
+                <div>
+                    <span class="eyebrow">{{ listing.category_name }}</span>
+                    <h1>{{ listing.title }} {% if listing.host and listing.host.blue_tick_active %}<span class="blue-tick" title="تیک آبی فعال">✓</span>{% endif %}</h1>
+                    <p class="location-line">⌖ {{ listing.city }}{% if listing.area %}، {{ listing.area }}{% endif %}{% if listing.address %} — {{ listing.address }}{% endif %}</p>
+<div class="owner-card">
+  <div class="owner-main">
+    <div class="owner-profile">
+      <div class="owner-avatar">{% if listing.host.profile_photo %}<img src="{{ url_for('static', filename='uploads/' ~ listing.host.profile_photo) }}" alt="عکس میزبان">{% else %}{{ (listing.host.full_name or 'ج')[0]|upper }}{% endif %}</div>
+      <div>
+      <div class="owner-name"><strong>{{ listing.host.full_name }}</strong>{% if listing.host.identity_verified %}<span class="verified-badge">✓ هویت تأییدشده</span>{% endif %}{% if listing.host.blue_tick_active %}<span class="blue-tick">✓</span>{% endif %}</div>
+      <div class="owner-phone">⭐ {{ '%.1f'|format(listing.host_rating or 0) }} · {{ listing.host_successful_rentals }} رزرو موفق · {{ listing.host_listing_count if listing.host_listing_count is defined else '' }} اقامتگاه</div>
+      </div>
+    </div>
+    <div class="trust-mini">{% if listing.host.phone_verified %}<span>🟢 شماره</span>{% endif %}{% if listing.host.identity_verified %}<span>🟢 هویت</span>{% endif %}{% if listing.host.ownership_verified %}<span>🟢 مالکیت</span>{% endif %}{% if listing.host.blue_tick_active %}<span>🔵 تیک</span>{% endif %}</div>
+  </div>
+</div>
+{% if (listing.latitude is not none and listing.longitude is not none) or listing.address or listing.area or listing.city %}
+<div class="map-actions">
+    <a class="btn btn-primary" target="_blank" rel="noopener noreferrer" href="{{ google_maps_directions_url(listing) }}">📍 مسیریابی با Google Maps</a>
+</div>
+{% if listing.latitude is not none and listing.longitude is not none %}
+<div id="detail-map"></div><div class="location-caption">📍 موقعیت ثبت‌شده آگهی · برای مسیریابی از دکمه بالا استفاده کنید.</div>
+{% endif %}
+{% endif %}
+
+                </div>
+                <div class="detail-rating">★ {{ listing.rating }} <small>({{ listing.review_count }} نظر)</small></div>
+            </div>
+
+            <div class="detail-specs">
+                {% if listing.category == 'car' %}
+                  {% for key,label in [('brand','برند'),('model','مدل'),('year','سال ساخت'),('gearbox','گیربکس'),('fuel','سوخت'),('kilometers','کارکرد'),('insurance','بیمه'),('mileage_limit','محدودیت کیلومتر'),('driver_conditions','شرایط راننده')] %}
+                    {% set val = listing.details.get(key) if listing.details is defined else '' %}{% if val %}<div class="detail-spec"><small>{{ label }}</small><strong>{{ val }}</strong></div>{% endif %}
+                  {% endfor %}
+                {% elif listing.category == 'gaming' %}
+                  {% for key,label in [('device_type','نوع دستگاه'),('brand','برند'),('model','مدل'),('storage','ظرفیت / حافظه'),('item_condition','وضعیت'),('included_items','لوازم همراه')] %}
+                    {% set val = listing.details.get(key) if listing.details is defined else '' %}{% if val %}<div class="detail-spec"><small>{{ label }}</small><strong>{{ val }}</strong></div>{% endif %}
+                  {% endfor %}
+                {% elif listing.category == 'equipment' %}
+                  {% for key,label in [('equipment_type','نوع وسیله'),('brand','برند'),('model','مدل'),('quantity','تعداد'),('item_condition','وضعیت'),('included_items','لوازم همراه')] %}
+                    {% set val = listing.details.get(key) if listing.details is defined else '' %}{% if val %}<div class="detail-spec"><small>{{ label }}</small><strong>{{ val }}</strong></div>{% endif %}
+                  {% endfor %}
+                {% elif listing.category == 'camera' %}
+                  {% for key,label in [('camera_type','نوع دوربین'),('brand','برند'),('model','مدل'),('megapixels','رزولوشن / مگاپیکسل'),('lens','لنز'),('camera_storage','حافظه'),('camera_accessories','لوازم همراه'),('item_condition','وضعیت')] %}
+                    {% set val = listing.details.get(key) if listing.details is defined else '' %}{% if val %}<div class="detail-spec"><small>{{ label }}</small><strong>{{ val }}</strong></div>{% endif %}
+                  {% endfor %}
+                {% elif listing.category == 'stay' %}
+                  {% for key,label in [('stay_type','نوع اقامتگاه'),('stay_bedrooms','تعداد خواب'),('stay_bathrooms','تعداد حمام'),('stay_capacity','ظرفیت نفرات'),('stay_amenities','امکانات'),('stay_rules','قوانین اقامت')] %}
+                    {% set val = listing.details.get(key) if listing.details is defined else '' %}{% if val %}<div class="detail-spec"><small>{{ label }}</small><strong>{{ val }}</strong></div>{% endif %}
+                  {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="feature-strip">
+                <span>♙ تا {{ listing.max_guests }} مهمان</span>
+                <span>▤ {{ listing.bedrooms }} اتاق</span>
+                <span>▥ {{ listing.bathrooms }} حمام</span>{% if listing.parking %}<span>🚗 پارکینگ</span>{% endif %}{% if listing.pool %}<span>🏊 استخر</span>{% endif %}{% if listing.pets_allowed %}<span>🐾 حیوان خانگی</span>{% endif %}
+            </div>
+
+            <div class="detail-section">
+                <h2>درباره این اقامتگاه</h2>
+                <p class="description">{{ listing.description or 'توضیحی برای این اقامتگاه ثبت نشده است.' }}</p>
+            </div>
+            <div class="detail-section">
+                <h2>نظرات مهمان‌ها</h2>
+                {% for review in reviews %}
+                <div class="review-item">
+                    <div class="review-top"><strong>{{ review.user.full_name }} {% if review.is_verified %}<small class="verified-review">✓ اقامت تأییدشده</small>{% endif %}</strong><span>★ {{ review.rating }}</span></div>
+                    <div class="review-dimension-summary">{% if review.cleanliness %}<span>تمیزی {{ review.cleanliness }}⭐</span>{% endif %}{% if review.location_rating %}<span>موقعیت {{ review.location_rating }}⭐</span>{% endif %}{% if review.amenities_rating %}<span>امکانات {{ review.amenities_rating }}⭐</span>{% endif %}{% if review.host_behavior_rating %}<span>میزبان {{ review.host_behavior_rating }}⭐</span>{% endif %}{% if review.value_rating %}<span>ارزش {{ review.value_rating }}⭐</span>{% endif %}</div>
+                    <p>{{ review.comment }}</p>
+                    {% if review.host_reply %}<div class="host-reply"><strong>پاسخ میزبان</strong><p>{{ review.host_reply }}</p></div>{% endif %}
+                </div>
+                {% else %}
+                <p class="muted">هنوز نظری ثبت نشده است.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <aside class="booking-card">
+            {% if price_drop %}<div class="price-drop-alert">🔔 قیمت این آگهی نسبت به زمان ذخیره شدن کاهش یافته است.</div>{% endif %}
+            <div class="booking-price"><strong>{{ "{:,}".format(listing.price_per_night) }}</strong> تومان <span>/ شب</span>{% if listing.weekend_price %}<small class="weekend-price">آخر هفته: {{ "{:,}".format(listing.weekend_price) }} تومان</small>{% endif %}</div>
+            <div class="muted booking-times">ورود {{ listing.check_in_time or '14:00' }} · خروج {{ listing.check_out_time or '12:00' }}</div>
+            {% if current_user %}
+            <form method="post" action="{{ url_for('create_booking', listing_id=listing.id) }}" class="form-stack">
+                <div class="form-two">
+                    <label>ورود<input class="jalali-input" data-target="booking_check_in" placeholder="انتخاب تاریخ شمسی" readonly required><input type="hidden" id="booking_check_in" name="check_in"></label>
+                    <label>خروج<input class="jalali-input" data-target="booking_check_out" placeholder="انتخاب تاریخ شمسی" readonly required><input type="hidden" id="booking_check_out" name="check_out"></label>
+                </div>
+                <label>تعداد مهمان
+                    <input type="number" name="guests_count" min="1" max="{{ listing.max_guests }}" value="1" required>
+                </label>
+                <label>یادداشت <span class="optional">(اختیاری)</span>
+                    <textarea name="notes" rows="3" placeholder="اگر نکته‌ای برای میزبان دارید..."></textarea>
+                </label>
+                <button class="btn btn-primary full" type="submit">درخواست رزرو</button>
+            </form>
+            <form method="post" action="{{ url_for('toggle_favorite', listing_id=listing.id) }}">
+                <button class="btn btn-outline full favorite-action" type="submit">{{ '♥ حذف از علاقه‌مندی' if is_favorite else '♡ افزودن به علاقه‌مندی' }}</button>
+            </form>
+            <div style="display:grid;gap:8px;margin-top:10px">
+              <form method="post" action="{{ url_for('toggle_compare', listing_id=listing.id) }}"><button class="btn btn-outline full" type="submit">{{ '✓ حذف از مقایسه' if compare_selected else '⚖️ افزودن به مقایسه' }}</button></form>
+              <a class="btn btn-outline full" href="{{ url_for('compare_listings') }}">مقایسه آگهی‌های من</a>
+            </div>
+            <div class="panel-card" style="margin-top:12px;padding:14px"><strong>🛡️ امتیاز اعتماد میزبان: {{ listing.host_trust_score }}٪</strong><div class="muted" style="font-size:12px;margin-top:5px">بر اساس سابقه رزرو، نظرها و تأییدهای حساب</div></div>
+            <div class="panel-card" style="margin-top:12px;padding:14px"><strong>💰 پیشنهاد قیمت</strong><form method="post" action="{{ url_for('make_price_offer',listing_id=listing.id) }}" class="form-stack" style="margin-top:8px"><input name="amount" type="number" min="1" placeholder="مبلغ پیشنهادی (تومان)" required><input name="message" placeholder="توضیح کوتاه (اختیاری)"><button class="btn btn-outline full">ارسال پیشنهاد</button></form></div>
+            {% else %}
+                <p class="muted">برای رزرو این اقامتگاه ابتدا وارد حساب خود شوید.</p>
+                <a class="btn btn-primary full" href="{{ url_for('login', next=request.path) }}">ورود برای رزرو</a>
+            {% endif %}
+
+            {% set contact_number = listing.contact_phone or listing.host.mobile %}
+            <div class="contact-actions">
+              <a class="btn btn-outline" href="{{ url_for('start_chat', user_id=listing.host_id, listing_id=listing.id) if current_user else url_for('login', next=request.path) }}">💬 چت با صاحب آگهی</a>
+              {% if listing.show_contact_phone and contact_number %}
+              <button class="btn btn-primary contact-reveal-btn" type="button" data-phone="{{ contact_number }}" onclick="revealListingPhone(this)">📞 تماس با صاحب آگهی</button>
+              {% else %}
+              <span class="btn btn-disabled">📞 تماس غیرفعال است</span>
+              {% endif %}
+            </div>
+            {% if listing.show_contact_phone and contact_number %}
+            <div class="phone-reveal" id="listing-phone-box" hidden>
+              <div class="phone-reveal-icon">☎</div>
+              <div class="phone-reveal-content"><small>شماره تماس اجاره‌دهنده</small><strong id="listing-phone-number">{{ contact_number }}</strong></div>
+              <a id="listing-phone-call" class="btn btn-primary phone-call-btn" href="tel:{{ contact_number }}">تماس</a>
+            </div>
+            {% endif %}
+        </aside>
+    </div>
+
+    {% if current_user %}
+    <section class="detail-section review-form-section">
+        <h2>نظر شما</h2>
+        <form method="post" action="{{ url_for('create_review', listing_id=listing.id) }}" class="review-form">
+            <select name="rating" required><option value="">امتیاز کلی</option>{% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} — {{ 'عالی' if n==5 else ('خوب' if n==4 else ('متوسط' if n==3 else ('ضعیف' if n==2 else 'خیلی ضعیف'))) }}</option>{% endfor %}</select>
+            <div class="review-dimensions">
+              <label>تمیزی<select name="cleanliness">{% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} ⭐</option>{% endfor %}</select></label>
+              <label>موقعیت<select name="location_rating">{% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} ⭐</option>{% endfor %}</select></label>
+              <label>امکانات<select name="amenities_rating">{% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} ⭐</option>{% endfor %}</select></label>
+              <label>برخورد میزبان<select name="host_behavior_rating">{% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} ⭐</option>{% endfor %}</select></label>
+              <label>ارزش نسبت به قیمت<select name="value_rating">{% for n in [5,4,3,2,1] %}<option value="{{ n }}">{{ n }} ⭐</option>{% endfor %}</select></label>
+            </div>
+            <textarea name="comment" placeholder="تجربه‌تان را بنویسید..." rows="4"></textarea>
+            <button class="btn btn-primary" type="submit">ثبت نظر</button>
+        </form>
+    </section>
+    {% endif %}
+</section>
+
+<script>
+function revealListingPhone(button){
+  const box=document.getElementById('listing-phone-box');
+  const number=document.getElementById('listing-phone-number');
+  const call=document.getElementById('listing-phone-call');
+  const phone=button.dataset.phone||'';
+  if(!box||!number||!call||!phone)return;
+  number.textContent=phone;
+  const normalized=phone.replace(/\s+/g,'').replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+  call.href='tel:'+normalized;
+  box.hidden=false;
+  fetch('{{ url_for("listing_contact_click", listing_id=listing.id) }}',{method:'POST'}).catch(()=>{});
+  button.textContent='✓ شماره تماس نمایش داده شد';
+  button.disabled=true;
+  button.classList.add('revealed');
+}
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script>
+document.addEventListener('DOMContentLoaded',function(){const el=document.getElementById('detail-map');if(!el)return;const lat={{ listing.latitude|tojson }},lng={{ listing.longitude|tojson }};const map=L.map(el).setView([lat,lng],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);L.marker([lat,lng]).addTo(map);});
+</script>
+<section class="panel-card report-card">
+<h2>⚠️ گزارش این آگهی</h2>
+<form method="post" action="{{ url_for('report_listing', listing_id=listing.id) }}">
+<select name="reason" required>
+<option>کلاهبرداری</option><option>اطلاعات نادرست</option><option>قیمت غیرواقعی</option><option>آگهی تکراری</option><option>محتوای نامناسب</option><option>سایر</option>
+</select>
+<textarea name="details" rows="3" placeholder="توضیحات اختیاری"></textarea>
+<button class="btn btn-outline" type="submit">ثبت گزارش</button>
+</form>
+</section>
+{% endblock %}

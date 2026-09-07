@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}پشتیبانی | جاکو{% endblock %}
+{% block content %}
+<div class="dashboard-page">
+  <div class="dashboard-header"><div><span class="eyebrow">همراه شما</span><h1>پشتیبانی جاکو</h1><p>مشکل یا سوالت را برای تیم پشتیبانی ارسال کن.</p></div><a class="btn btn-primary" href="{{ url_for('support_new') }}">تیکت جدید</a></div>
+  <section class="panel-card">
+    {% for t in tickets %}
+    <a class="support-ticket-card" href="{{ url_for('support_ticket',ticket_id=t.id) }}"><div><strong>#{{ t.id }} · {{ t.subject }}</strong><small>{{ t.category }} · {{ t.created_at }}</small></div><span class="status-badge">{{ 'باز' if t.status=='open' else 'بسته' }}</span></a>
+    {% else %}<div class="empty-state">هنوز تیکتی ثبت نکرده‌ای.</div>{% endfor %}
+  </section>
+</div>
+{% endblock %}

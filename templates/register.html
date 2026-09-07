@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}ثبت‌نام | جاکو{% endblock %}
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card wide-auth">
+        <div class="auth-logo">جاکو <span>⌂</span></div>
+        <h1>عضویت در جاکو</h1>
+        <p class="auth-subtitle">اطلاعات حساب را وارد کن؛ برای تکمیل ثبت‌نام، شماره موبایل با OTP تأیید می‌شود.</p>
+        <form method="post" class="form-stack">
+            <label>نام و نام خانوادگی
+                <input name="full_name" placeholder="مثلاً علی رضایی" required>
+            </label>
+            <label>شماره موبایل
+                <input type="tel" name="mobile" placeholder="۰۹۱۲..." required>
+            </label>
+            <label>ایمیل <span class="optional">(اختیاری)</span>
+                <input type="email" name="email" placeholder="example@email.com">
+            </label>
+            <label>نوع حساب
+                <select name="account_type" required>
+                    <option value="guest">میهمان</option>
+                    <option value="host">میزبان</option>
+                </select>
+            </label>
+            <div class="form-two">
+                <label>رمز عبور
+                    <input type="password" name="password" placeholder="حداقل ۶ کاراکتر" required>
+                </label>
+                <label>تکرار رمز عبور
+                    <input type="password" name="confirm_password" placeholder="تکرار رمز" required>
+                </label>
+            </div>
+            <label class="consent-check">
+                <input type="checkbox" name="accept_terms" value="1" required>
+                <span>قوانین و مقررات <a href="{{ url_for('terms') }}" target="_blank" rel="noopener">را مطالعه کردم</a> و می‌پذیرم.</span>
+            </label>
+            <label class="consent-check">
+                <input type="checkbox" name="accept_privacy" value="1" required>
+                <span>سیاست <a href="{{ url_for('privacy') }}" target="_blank" rel="noopener">حریم خصوصی</a> را مطالعه کردم و می‌پذیرم.</span>
+            </label>
+            <button class="btn btn-primary full" type="submit">ارسال کد OTP و ادامه ثبت‌نام</button>
+        </form>
+        <p class="auth-bottom">قبلاً ثبت‌نام کرده‌اید؟ <a href="{{ url_for('login') }}">وارد شوید</a></p>
+    </div>
+</section>
+{% endblock %}

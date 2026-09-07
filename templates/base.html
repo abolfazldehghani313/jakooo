@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="{{ app_settings.get('app_theme_color','#087d50') }}">
+<link rel="manifest" href="{{ url_for('dynamic_manifest') }}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>{% block title %}{{ app_name }} | اقامتگاه برای هر سفر{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}?v=20">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/panels.css') }}">
+{% block head %}{% endblock %}
+<style>
+@media(max-width:900px){
+  html,body{overflow-x:hidden}body{padding-bottom:92px!important}
+  .mobile-bottom-nav{display:grid!important;position:fixed!important;left:0!important;right:0!important;bottom:0!important;transform:none!important;width:100%!important;max-width:none!important;height:78px!important;border-radius:0!important;z-index:99999!important;background:#fff!important;border-top:1px solid #e7ece9!important;box-shadow:0 -5px 18px rgba(20,45,35,.08)!important;grid-template-columns:repeat(5,1fr)!important;align-items:end!important;padding:7px 9px 9px!important}
+  .mobile-bottom-nav a{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;height:62px!important;text-align:center!important}
+  .mobile-bottom-nav .mobile-add{height:74px!important;margin-top:-25px!important}
+}
+@media(min-width:901px){.mobile-bottom-nav{display:none!important}}
+
+  .mobile-bottom-nav{padding-bottom:max(9px,env(safe-area-inset-bottom))!important}
+  @media(max-width:900px){
+    main{min-height:calc(100vh - 78px)}
+    .site-footer{padding-bottom:105px!important}
+  }
+</style>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<div class="mobile-app-header">
+  <button class="mobile-header-menu" type="button" data-menu-open aria-label="باز کردن منو"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="mobile-app-brand" href="{{ url_for('index') }}"><span class="brand-mark"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></span>{{ app_name }}</a>
+  <a class="mobile-header-notify" href="{{ url_for('notifications') if current_user else url_for('login') }}"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8M10 21h4"/></svg>{% if unread_notifications %}<b>{{ unread_notifications if unread_notifications<100 else '99+' }}</b>{% endif %}</a>
+</div>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></span><span>{{ app_name }}</span></a>
+    <nav class="desktop-nav">
+      <a href="{{ url_for('index') }}">خانه</a>
+      <a href="{{ url_for('search') }}">اقامتگاه‌ها</a>
+      {% if current_user %}
+      <a href="{{ url_for('favorites') }}">علاقه‌مندی‌ها</a>
+      <a href="{{ url_for('bookings') }}">رزروهای من</a>
+      <a href="{{ url_for('notifications') }}" class="header-notification-link"><span class="nav-inline-icon"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8M10 21h4"/></svg></span>اعلان‌ها{% if unread_notifications %}<b class="notify-dot">{{ unread_notifications if unread_notifications < 100 else '99+' }}</b>{% endif %}</a>
+      <a href="{{ url_for('messages') }}">پیام‌ها</a>
+      <a href="{{ url_for('recommendations') }}">✨ پیشنهادهای من</a>
+      {% if current_user.role in ['host','admin'] %}<a href="{{ url_for('host_panel') }}">پنل میزبان</a><a href="{{ url_for('host_analytics') }}">📊 آمار حرفه‌ای</a>{% endif %}
+      <a href="{{ url_for('support') }}">پشتیبانی</a>
+      {% if current_user.role=='admin' %}<a href="{{ url_for('admin_panel') }}">مدیریت</a>{% endif %}
+      {% endif %}
+    </nav>
+    <div class="header-actions">
+      {% if current_user %}
+      <a href="{{ url_for('profile') }}" class="header-profile-link"><span class="nav-inline-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c.5-4 3-6 7-6s6.5 2 7 6"/></svg></span>پروفایل</a><a class="btn btn-outline small" href="{{ url_for('logout') }}">خروج</a>
+      {% else %}
+      <a class="btn btn-outline small" href="{{ url_for('login') }}">ورود</a><a class="btn btn-primary small" href="{{ url_for('register') }}">ثبت‌نام</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+{% with messages=get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-wrap container">
+  {% for category,message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<main>{% block content %}{% endblock %}</main>
+
+
+
+<div class="menu-overlay" data-menu-overlay></div>
+<aside class="app-drawer" data-app-drawer aria-hidden="true">
+  <div class="drawer-head"><a class="brand" href="{{ url_for('index') }}"><span class="brand-mark"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></span><span>{{ app_name }}</span></a><button type="button" class="drawer-close" data-menu-close aria-label="بستن">×</button></div>
+  <div class="drawer-profile">
+    {% if current_user %}<strong>{{ current_user.full_name }}</strong><small>{{ 'میزبان' if current_user.role=='host' else ('مدیر' if current_user.role=='admin' else 'میهمان') }}</small>
+    {% else %}<strong>به جاکو خوش آمدید</strong><small>برای ذخیره و رزرو وارد شوید.</small>{% endif %}
+  </div>
+  <nav class="drawer-nav">
+    <a href="{{ url_for('index') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></span><span>خانه</span></a>
+    <a href="{{ url_for('search') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></span><span>جستجوی آگهی</span></a>
+    <a href="{{ url_for('favorites') if current_user else url_for('login') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M20.8 8.8c0 5.4-8.8 10-8.8 10S3.2 14.2 3.2 8.8A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8Z"/></svg></span><span>علاقه‌مندی‌ها</span></a>
+    <a href="{{ url_for('bookings') if current_user else url_for('login') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span><span>رزروهای من</span></a>
+    <a href="{{ url_for('messages') if current_user else url_for('login') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg></span><span>پیام‌ها</span></a>
+    <a href="{{ url_for('notifications') if current_user else url_for('login') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8M10 21h4"/></svg></span><span>اعلان‌ها{% if unread_notifications %} ({{ unread_notifications }}){% endif %}</span></a>
+    {% if current_user and current_user.role in ['host','admin'] %}
+      <a href="{{ url_for('host_panel') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></span><span>پنل میزبان</span></a>
+      <a href="{{ url_for('subscriptions') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span><span>اشتراک</span></a>
+      <a href="{{ url_for('blue_tick') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></span><span>تیک آبی 🔵</span></a>
+      <a href="{{ url_for('ads') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H4z"/><path d="M8 9h8M8 12h5M8 17v3M16 17v3"/></svg></span><span>تبلیغات و ارتقا</span></a>
+      
+    {% endif %}
+    {% if current_user and current_user.role=='admin' %}
+      <a href="{{ url_for('admin_panel') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><span>پنل مدیریت</span></a>
+      <a href="{{ url_for('admin_payment_settings') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/><circle cx="17" cy="15" r="1"/></svg></span><span>تنظیمات درگاه پرداخت</span></a>
+      <a href="{{ url_for('admin_auth_settings') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12h6M12 9v6"/></svg></span><span>تنظیمات احراز هویت</span></a>
+    {% endif %}
+{% if current_user %}<button type="button" class="drawer-push-btn" onclick="window.jakoEnableNotifications&&window.jakoEnableNotifications().then(ok=>alert(ok?'اعلان‌ها فعال شد.':'فعال‌سازی اعلان‌ها انجام نشد.'))">🔔 فعال‌سازی اعلان‌ها</button><a href="{{ url_for('support') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg></span><span>پشتیبانی{% if open_tickets %} ({{ open_tickets }}){% endif %}</span></a>{% endif %}
+    <a href="{{ url_for('terms') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg></span><span>قوانین و مقررات</span></a>
+    <a href="{{ url_for('privacy') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span><span>حریم خصوصی</span></a>
+    {% if current_user %}<a href="{{ url_for('logout') }}" class="drawer-danger"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M10 5H5v14h5M13 8l4 4-4 4M17 12H9"/></svg></span><span>خروج</span></a>{% else %}<a href="{{ url_for('login') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><path d="M13 8l4 4-4 4M17 12H5"/><path d="M19 5h-5M19 19h-5"/></svg></span><span>ورود</span></a><a href="{{ url_for('register') }}"><span class="drawer-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c.5-4 3-6 7-6s6.5 2 7 6"/><path d="M19 8v6M16 11h6"/></svg></span><span>ثبت‌نام</span></a>{% endif %}
+  </nav>
+  <div class="drawer-footer">{{ app_name }} · هر سفر، یک خاطره ماندگار</div>
+</aside>
+
+<nav class="mobile-bottom-nav" aria-label="ناوبری اصلی جاکو">
+  <a class="{{ 'is-active' if request.endpoint == 'profile' else '' }}" href="{{ url_for('profile') if current_user else url_for('login') }}">
+    <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c.5-4 3-6 7-6s6.5 2 7 6"/></svg></span><small>پروفایل</small>
+  </a>
+  <a class="{{ 'is-active' if request.endpoint == 'favorites' else '' }}" href="{{ url_for('favorites') if current_user else url_for('login') }}">
+    <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.4-8.8 10-8.8 10S3.2 14.2 3.2 8.8A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8Z"/></svg></span><small>علاقه‌مندی‌ها</small>
+  </a>
+  <a class="mobile-add {{ 'is-active' if request.endpoint == 'create_listing' else '' }}" href="{{ url_for('create_listing') if current_user and current_user.role in ['host','admin'] else url_for('register') }}">
+    <span class="nav-add-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><small>ثبت اجاره</small>
+  </a>
+  <a class="{{ 'is-active' if request.endpoint in ['messages','conversation'] else '' }}" href="{{ url_for('messages') if current_user else url_for('login') }}">
+    <span class="nav-icon nav-message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>{% if unread_messages %}<b class="nav-dot"></b>{% endif %}</span><small>پیام‌ها</small>
+  </a>
+  <a class="{{ 'is-active' if request.endpoint == 'index' else '' }}" href="{{ url_for('index') }}">
+    <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></span><small>خانه</small>
+  </a>
+</nav>
+{% block scripts %}{% endblock %}
+
+
+<div id="pwa-splash" class="pwa-splash" aria-hidden="true">
+  <div class="pwa-splash-card">
+    <div class="pwa-splash-icon"><img src="{{ url_for('static',filename=app_settings.get('app_icon','images/placeholder.svg')) }}" alt=""></div>
+    <strong>{{ app_name }}</strong><span>هر سفر، یک خاطره ماندگار</span>
+  </div>
+</div>
+<script>
+(function(){
+  if(!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', async function(){
+    try{
+      const reg=await navigator.serviceWorker.register('{{ url_for("root_service_worker") }}');
+      window.jakoPwaRegistration=reg;
+    }catch(e){}
+  });
+})();
+window.JAKO_PUSH_PUBLIC_KEY={{ app_settings.get('push_vapid_public_key','')|tojson }};
+window.JAKO_APP_NAME={{ app_name|tojson }};
+</script>
+<script src="{{ url_for('static',filename='js/pwa.js') }}?v=1" defer></script>
+
+<script>
+(function () {
+  function initJakoDrawer() {
+    const drawer = document.querySelector('[data-app-drawer]');
+    const overlay = document.querySelector('[data-menu-overlay]');
+    const openButtons = document.querySelectorAll('[data-menu-open]');
+    const closeButtons = document.querySelectorAll('[data-menu-close]');
+    if (!drawer) return;
+
+    function openDrawer(e) {
+      if (e) e.preventDefault();
+      drawer.classList.add('open');
+      if (overlay) overlay.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('drawer-open');
+    }
+    function closeDrawer(e) {
+      if (e) e.preventDefault();
+      drawer.classList.remove('open');
+      if (overlay) overlay.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('drawer-open');
+    }
+
+    openButtons.forEach(btn => {
+      btn.addEventListener('click', openDrawer);
+      btn.addEventListener('touchend', openDrawer, {passive:false});
+    });
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', closeDrawer);
+      btn.addEventListener('touchend', closeDrawer, {passive:false});
+    });
+    if (overlay) {
+      overlay.addEventListener('click', closeDrawer);
+      overlay.addEventListener('touchend', closeDrawer, {passive:false});
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeDrawer(e);
+    });
+    drawer.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', function () {
+        closeDrawer();
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initJakoDrawer);
+  } else {
+    initJakoDrawer();
+  }
+})();
+</script>
+
+</body>
+</html>

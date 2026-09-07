@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}پنل میزبان | جاکو{% endblock %}
+{% block head %}<style>.listing-rejection{margin-top:8px;background:#fff5f5;border:1px solid #f0d2d2;padding:9px;border-radius:10px;font-size:11px;color:#7a3333}.analytics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.analytics-card{border:1px solid var(--line);border-radius:14px;padding:13px}.analytics-card strong{display:block;margin-bottom:9px}.analytics-card div{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:11px}@media(max-width:650px){.analytics-grid{grid-template-columns:1fr}}</style>{% endblock %}
+{% block content %}
+<div class="dashboard-page host-dashboard">
+  <div class="dashboard-header">
+    <div><span class="eyebrow">میزبانی جاکو</span><h1>پنل میزبان</h1><p>آگهی‌ها، رزروها، استوری، اشتراک، تیک آبی و تبلیغات را یکجا مدیریت کن.</p></div>
+    <div class="action-row icon-action-row">
+      <a class="btn btn-primary" href="{{ url_for('create_listing') }}"><span class="btn-icon"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M12 8v7M8.5 11.5h7"/></svg></span>ثبت اجاره</a>
+      <a class="btn btn-outline" href="{{ url_for('create_story') }}"><span class="btn-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.4"/><path d="m5 17 4-4 3 3 2-2 5 5"/></svg></span>استوری</a>
+      <a class="btn btn-outline" href="{{ url_for('subscriptions') }}"><span class="btn-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span>اشتراک</a>
+      <a class="btn btn-outline" href="{{ url_for('ads') }}"><span class="btn-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H4z"/><path d="M8 9h8M8 12h5M8 17v3M16 17v3"/></svg></span>تبلیغات</a>
+      <a class="btn btn-outline" href="{{ url_for('support') }}"><span class="btn-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg></span>پشتیبانی</a>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><span>اقامتگاه</span><strong>{{ listings|length }}</strong></div>
+    <div class="stat-card"><span>درخواست رزرو</span><strong>{{ bookings|length }}</strong></div>
+    <div class="stat-card"><span>درآمد تأییدشده</span><strong>{{ '{:,}'.format(revenue or 0) }}</strong><small>تومان</small></div>
+    <div class="stat-card"><span>اقامتگاه منتشرشده</span><strong>{{ published_count }}</strong></div>
+    <div class="stat-card"><span>اشتراک</span><strong>{{ active_subscription.plan_name if active_subscription else 'نداری' }}</strong></div>
+    <div class="stat-card"><span>بازدید تبلیغات</span><strong>{{ ad_impressions or 0 }}</strong></div>
+  </div>
+
+  <section class="panel-card" style="margin-top:18px">
+    <div class="panel-title"><h2>📊 Analytics آگهی‌ها</h2><p class="muted">بازدید، علاقه‌مندی، تماس، پیام و رزرو هر آگهی</p></div>
+    <div class="analytics-grid">
+    {% for x in analytics %}
+      <div class="analytics-card"><strong>{{ x.title }}</strong><div><span>👁️ {{ x.views }}</span><span>❤️ {{ x.favorites }}</span><span>📞 {{ x.contacts }}</span><span>💬 {{ x.messages }}</span><span>📅 {{ x.bookings }}</span></div></div>
+    {% else %}<div class="empty-state">هنوز داده‌ای برای تحلیل وجود ندارد.</div>{% endfor %}
+    </div>
+  </section>
+<div class="dashboard-grid">
+    <section class="panel-card">
+      <div class="panel-title"><h2><span class="title-icon"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></svg></span>آگهی‌های من</h2></div>
+      {% for l in listings %}
+      <div class="table-row">
+        <div><strong>{{ l.title }}</strong><small>{{ l.city }} · {{ '{:,}'.format(l.price_per_night|default(0)) }} تومان</small></div>
+        <div class="inline-actions">
+          {% if l.status=='published' %}<a class="btn btn-outline small" href="{{ url_for('listing_availability',listing_id=l.id) }}">تقویم</a><a class="btn btn-outline small" href="{{ url_for('listing_detail',listing_id=l.id) }}">مشاهده</a><form method="post" action="{{ url_for('promote_listing',listing_id=l.id) }}"><button class="btn btn-outline small icon-btn" type="submit"><span class="btn-icon"><svg viewBox="0 0 24 24"><path d="M12 3 14 8l5 .5-3.8 3.4 1.1 5.1-4.3-2.7-4.3 2.7 1.1-5.1L5 8.5 10 8z"/></svg></span>ارتقای ۷ روزه</button></form>{% endif %}
+          <span class="status-badge status-{{ l.workflow_status or l.status }}">{% if l.workflow_status=='pending_review' or l.status=='pending' %}در انتظار بررسی{% elif l.workflow_status=='approved' or l.status=='published' %}تأیید شده{% elif l.workflow_status=='rejected' %}رد شده{% elif l.workflow_status=='needs_revision' %}نیازمند اصلاح{% elif l.workflow_status=='expired' %}منقضی شده{% else %}تعلیق{% endif %}</span>
+          {% if l.workflow_status in ['rejected','needs_revision'] and l.rejection_reason %}<div class="listing-rejection"><strong>❌ دلیل:</strong> {{ l.rejection_reason }} <a class="btn btn-outline small" href="{{ url_for('create_listing',edit=l.id) }}">🔧 ویرایش و ارسال مجدد</a></div>{% endif %}
+        </div>
+      </div>
+      {% else %}<div class="empty-state">هنوز آگهی‌ای نداری.</div>{% endfor %}
+    </section>
+
+    <section class="panel-card">
+      <div class="panel-title"><h2><span class="title-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>رزروها</h2></div>
+      {% for b in bookings %}
+      <div class="table-row"><div><strong>{{ b.title }}</strong><small>{{ b.guest_name }} · {{ b.check_in }} تا {{ b.check_out }}</small></div><div class="inline-actions">{% if b.status=='pending' %}<form method="post" action="{{ url_for('host_booking_action',booking_id=b.id,action='approve') }}"><button class="btn btn-success small" type="submit">تأیید</button></form>{% if b.status in ['pending','confirmed'] %}<form method="post" action="{{ url_for('cancel_booking',booking_id=b.id) }}"><input type="hidden" name="reason" value="لغو توسط میزبان"><button class="btn btn-danger small">لغو رزرو</button></form>{% endif %}
+      <form method="post" action="{{ url_for('host_booking_action',booking_id=b.id,action='reject') }}"><button class="btn btn-danger small" type="submit">رد</button></form>{% else %}<span class="status-badge">{{ b.status }}</span>{% endif %}</div></div>
+      {% else %}<div class="empty-state">رزروی ثبت نشده.</div>{% endfor %}
+    </section>
+  </div>
+
+  <div class="dashboard-grid">
+    <section class="panel-card">
+      <div class="panel-title"><h2><span class="title-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.4"/><path d="m5 17 4-4 3 3 2-2 5 5"/></svg></span>استوری‌های من</h2><a class="btn btn-outline small icon-btn" href="{{ url_for('create_story') }}"><span class="btn-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>استوری جدید</a></div>
+      {% for s in stories %}<div class="table-row"><div><strong>{{ s.listing_title or 'استوری عمومی' }}</strong><small>{{ s.duration_hours }} ساعت · {{ s.views }} بازدید{% if s.price is defined and s.price %} · {{ '{:,}'.format(s.price) }} تومان{% endif %}</small></div><span class="status-badge status-{{ s.status }}">{{ 'فعال' if s.status=='active' else 'در انتظار تأیید' if s.status=='pending' else 'رد شده' }}</span></div>{% else %}<div class="empty-state">هنوز استوری نساخته‌ای.</div>{% endfor %}
+    </section>
+
+    <section class="panel-card">
+      <div class="panel-title"><h2><span class="title-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H4z"/><path d="M8 9h8M8 12h5"/><path d="M8 17v3M16 17v3"/></svg></span>تبلیغات من</h2><a class="btn btn-outline small icon-btn" href="{{ url_for('ads') }}"><span class="btn-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>تبلیغ جدید</a></div>
+      {% for a in ads %}
+      <div class="table-row"><div><strong>تبلیغ #{{ a.id }}</strong><small>{{ a.duration_hours or 1 }} ساعت · {{ '{:,}'.format(a.price or 0) }} تومان{% if a.ends_at %} · تا {{ a.ends_at }}{% endif %}</small></div><span class="status-badge status-{{ a.status }}">{{ 'در انتظار تأیید' if a.status=='pending' else 'فعال' if a.status=='active' else 'رد شده' if a.status=='rejected' else 'منقضی' }}</span></div>
+      {% else %}<div class="empty-state">هنوز تبلیغی ثبت نکرده‌ای.</div>{% endfor %}
+    </section>
+  </div>
+  <div class="dashboard-grid">
+    <section class="panel-card blue-tick-host-card">
+      <div class="blue-tick-host-icon">✓</div>
+      <div class="blue-tick-host-copy">
+        <span class="eyebrow">خدمات ویژه</span>
+        <h2>تیک آبی 🔵</h2>
+        <p>پروفایل و آگهی‌های خودت را با تیک آبی ویژه متمایز کن. تیک فقط بعد از پرداخت موفق فعال می‌شود.</p>
+        {% if blue_tick_active %}
+          <div class="blue-tick-active-line">✓ فعال تا {{ current_user.blue_tick_ends_at }}</div>
+          <a class="btn btn-outline" href="{{ url_for('blue_tick') }}">مدیریت تیک آبی</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('blue_tick') }}">خرید تیک آبی</a>
+        {% endif %}
+      </div>
+    </section>
+    <section class="panel-card">
+      <div class="panel-title"><h2><span class="title-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg></span>پشتیبانی</h2><a class="btn btn-outline small" href="{{ url_for('support_new') }}">تیکت جدید</a></div>
+      <p class="muted">اگر در رزرو، پرداخت یا مدیریت اقامتگاه مشکلی داری، از اینجا با پشتیبانی جاکو در ارتباط باش.</p>
+      <a class="btn btn-primary" href="{{ url_for('support') }}">مشاهده تیکت‌ها</a>
+    </section>
+  </div>
+</div>
+{% endblock %}

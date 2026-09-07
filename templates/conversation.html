@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}گفت‌وگو با {{ other.full_name }} | جاکو{% endblock %}
+{% block head %}<style>
+.chat-page{max-width:1000px;margin:auto;padding:25px 14px 100px}.chat-shell{background:#fff;border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 18px 55px rgba(20,45,35,.08)}
+.chat-header{display:flex;align-items:center;gap:13px;padding:16px 18px;background:linear-gradient(135deg,#f8fcfa,#eef9f4);border-bottom:1px solid var(--line)}
+.chat-header>a{font-size:28px;text-decoration:none}.message-avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#e4f4ed;font-weight:900;color:#087d50}.chat-header small{display:block;color:#718078;margin-top:3px}.verified-tick{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#1d8cff;color:#fff;font-size:11px}
+.chat-tools{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}.chat-tools input{flex:1}.chat-messages{height:58vh;min-height:380px;overflow:auto;padding:20px;background:#f8faf9;display:flex;flex-direction:column;gap:9px}
+.bubble{max-width:72%;padding:11px 13px;border-radius:17px;background:#fff;border:1px solid var(--line);align-self:flex-start}.bubble.mine{align-self:flex-end;background:#e8f7f0;border-color:#ccebdc}.bubble p{margin:0;white-space:pre-wrap;line-height:1.8}.bubble small{display:block;color:#8a958f;font-size:10px;margin-top:5px}.bubble img{max-width:250px;display:block;border-radius:13px;margin-top:7px}.bubble-actions{margin-top:5px;display:flex;gap:4px}.bubble-actions button{border:0;background:transparent;cursor:pointer;font-size:14px}
+.chat-form{display:flex;gap:8px;padding:13px;border-top:1px solid var(--line);background:#fff}.chat-form input[name=body]{flex:1}.typing{font-size:11px;color:#8a958f;min-height:18px}
+@media(max-width:650px){.bubble{max-width:86%}.chat-messages{height:55vh}}
+</style>{% endblock %}
+{% block content %}<div class="chat-page"><div class="chat-shell">
+<div class="chat-header"><a href="{{ url_for('messages') }}">‹</a><div class="message-avatar">{{ other.full_name[:1] }}</div><div><strong>{{ other.full_name }} {% if other.blue_tick_active %}<span class="verified-tick">✓</span>{% endif %}</strong><small>{{ 'میزبان جاکو' if other.role in ['host','admin'] else 'مهمان جاکو' }}</small></div></div>
+<div class="chat-tools"><input id="chatSearch" placeholder="جستجو در این گفتگو..." oninput="filterChat(this.value)"><span class="typing" id="liveStatus"></span></div>
+<div class="chat-messages" id="chatMessages">{% for m in messages %}<div class="bubble {{ 'mine' if m.sender_id==current_user.id else 'theirs' }}" data-text="{{ m.body|e }}" data-id="{{ m.id }}"><p>{{ m.body }}</p>{% if m.image_filename %}<img src="{{ url_for('static', filename='uploads/'+m.image_filename) }}" alt="تصویر پیام">{% endif %}<small>{{ m.created_at }} {% if m.sender_id==current_user.id %}{{ '✓✓ خوانده شد' if m.is_read else '✓ ارسال شد' }}{% endif %}</small><div class="bubble-actions"><button type="button" onclick="reactMsg({{m.id}},'❤️')">❤️</button><button type="button" onclick="reactMsg({{m.id}},'👍')">👍</button><button type="button" onclick="replyMsg({{m.id}})">↩️</button></div></div>{% else %}<div class="empty-state">گفت‌وگو را شروع کنید 👋</div>{% endfor %}</div>
+<form class="chat-form" id="chatForm" method="post" enctype="multipart/form-data"><input type="hidden" name="listing_id" value="{{ listing_id or '' }}"><input type="hidden" name="reply_to_id" id="replyTo"><input name="body" id="chatBody" placeholder="پیامتان را بنویسید..." autocomplete="off"><label class="btn btn-outline small" style="cursor:pointer">📷<input type="file" name="image" id="chatImage" accept="image/jpeg,image/png,image/webp" hidden></label><button class="btn btn-primary" type="submit">ارسال</button></form>
+</div></div>
+<script>
+const uid={{ other.id }}; const box=document.getElementById('chatMessages'); let lastId={{ messages[-1].id if messages else 0 }};
+function scrollChat(){box.scrollTop=box.scrollHeight} scrollChat();
+function filterChat(q){q=q.toLowerCase();document.querySelectorAll('.bubble').forEach(x=>x.style.display=(x.dataset.text||'').toLowerCase().includes(q)?'':'none')}
+function replyMsg(id){document.getElementById('replyTo').value=id;document.getElementById('chatBody').focus();document.getElementById('chatBody').placeholder='پاسخ به پیام #'+id+'...'}
+async function reactMsg(id,r){const f=new FormData();f.append('reaction',r);await fetch('/message/'+id+'/reaction',{method:'POST',body:f})}
+async function refreshChat(){
+ const res=await fetch('/api/messages/'+uid); const data=await res.json(); if(!data.ok)return;
+ const fresh=data.messages.filter(m=>m.id>lastId); if(!fresh.length)return;
+ fresh.forEach(m=>{lastId=Math.max(lastId,m.id); const el=document.createElement('div');el.className='bubble '+(m.sender_id==={{current_user.id}}?'mine':'theirs');el.dataset.text=m.body;el.dataset.id=m.id;el.innerHTML='<p></p><small>'+m.created_at+(m.sender_id==={{current_user.id}}?' ✓ ارسال شد':'')+'</small><div class="bubble-actions"><button type="button" onclick="reactMsg('+m.id+',\'❤️\')">❤️</button><button type="button" onclick="replyMsg('+m.id+')">↩️</button></div>';el.querySelector('p').textContent=m.body;if(m.image_filename){const im=document.createElement('img');im.src='/static/uploads/'+m.image_filename;im.style.maxWidth='250px';el.insertBefore(im,el.querySelector('small'));}box.appendChild(el)});scrollChat();
+}
+document.getElementById('chatForm').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);const body=document.getElementById('chatBody');if(!body.value.trim()&&!document.getElementById('chatImage').files.length)return;const r=await fetch('/api/messages/'+uid,{method:'POST',body:f});const d=await r.json();if(d.ok){body.value='';document.getElementById('replyTo').value='';document.getElementById('chatImage').value='';await refreshChat();}});
+setInterval(refreshChat,5000);
+</script>{% endblock %}

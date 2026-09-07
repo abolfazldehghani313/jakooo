@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}تقویم موجودی | جاکو{% endblock %}
+{% block content %}
+<section class="dashboard-page">
+  <div class="dashboard-header"><div><span class="eyebrow">مدیریت آگهی</span><h1>تقویم موجودی: {{ listing.title }}</h1><p>سبز آزاد، قرمز رزرو/مسدود، زرد در انتظار درخواست.</p></div></div>
+  <form method="post" class="form-card">
+    <div class="form-four">
+      <label>تاریخ شمسی<input class="jalali-input" data-target="availability_date_j" placeholder="مثلاً ۱۴۰۵/۰۶/۱۵" readonly required><input type="hidden" id="availability_date_j" name="date" required></label>
+      <label>وضعیت<select name="status"><option value="available">🟢 آزاد</option><option value="blocked">⚫ مسدود</option><option value="pending">🟡 در انتظار</option></select></label>
+      <label>قیمت روز/ساعت (اختیاری)<input type="number" name="price" min="0"></label>
+    </div>
+    <button class="btn btn-primary">ذخیره وضعیت</button>
+  </form>
+  <section class="panel-card">
+    <div class="panel-title"><h2>وضعیت‌های ثبت‌شده</h2></div>
+    {% for a in availability %}
+      <div class="table-row">
+        <div><strong>{{ a.jalali_date or a.date }}</strong><small>{{ a.date }}</small><small>{{ '🟢 آزاد' if a.status=='available' else ('🟡 در انتظار' if a.status=='pending' else '⚫ مسدود') }}</small></div>
+        <strong>{{ '{:,}'.format(a.price or 0) }} تومان</strong>
+      </div>
+    {% else %}<div class="empty-state">هنوز وضعیت سفارشی ثبت نشده است.</div>{% endfor %}
+  </section>
+</section>
+<script src="{{ url_for('static', filename='js/jalali.js') }}"></script>
+{% endblock %}

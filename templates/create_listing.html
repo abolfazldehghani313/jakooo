@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block title %}ثبت اجاره | جاکو{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+.listing-create-page{max-width:980px;margin:auto}
+.create-hero{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:22px}
+.create-hero h1{margin:4px 0;font-size:30px}.create-hero p{margin:0;color:var(--muted);font-size:13px}
+.create-badge{background:var(--green-soft);color:var(--green-dark);padding:9px 13px;border-radius:14px;font-size:12px;font-weight:800;white-space:nowrap}
+.form-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:0 7px 24px rgba(20,50,40,.045)}
+.form-card h2{font-size:18px;margin:0 0 17px;display:flex;align-items:center;gap:9px}.form-card h2:before{content:'';width:5px;height:22px;border-radius:8px;background:var(--green)}
+.form-card label{display:block;font-size:12px;font-weight:700;color:#34413c}.form-card input,.form-card select,.form-card textarea{width:100%;margin-top:6px;border:1px solid #dfe7e3;border-radius:12px;background:#fff;padding:11px 12px;outline:none;color:var(--ink)}
+.form-card input:focus,.form-card select:focus,.form-card textarea:focus{border-color:#8ccfb2;box-shadow:0 0 0 3px rgba(7,143,91,.08)}
+.form-two,.form-three,.form-four{display:grid;gap:12px}.form-two{grid-template-columns:repeat(2,1fr)}.form-three{grid-template-columns:repeat(3,1fr)}.form-four{grid-template-columns:repeat(4,1fr)}
+.spec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.hidden-spec{display:none!important}
+.category-helper{display:flex;align-items:center;gap:10px;background:#f7faf8;border:1px solid #e3ece7;border-radius:14px;padding:12px;margin-bottom:14px;font-size:12px;color:#56635e}.category-helper strong{color:var(--green-dark)}
+.spec-title{font-size:12px;color:var(--muted);margin:-5px 0 13px}
+#listing-map{height:360px;border-radius:18px;margin-top:12px;border:1px solid #dfe8e3;overflow:hidden}.map-note{font-size:12px;color:var(--muted);margin:0 0 10px}.map-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.map-tools button{border:1px solid #dce6e1;background:#fff;border-radius:10px;padding:8px 12px;font-size:11px;font-weight:700}.map-tools button:hover{border-color:#9ed5bc;color:var(--green)}
+.map-coords{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px}.coord-status{font-size:11px;color:var(--green-dark);margin-top:8px}
+.check-feature{display:flex!important;align-items:center;gap:8px;padding:12px;border:1px solid #dfe7e3;border-radius:12px;background:#f8fbf9}.check-feature input{width:auto!important;margin:0!important}.price-hint{font-size:10px;color:var(--muted);font-weight:400}.form-submit{width:100%;min-height:52px;font-size:15px;border-radius:15px}
+@media(max-width:800px){.form-four,.spec-grid{grid-template-columns:repeat(2,1fr)}.create-hero{display:block}.create-badge{display:inline-block;margin-top:10px}}
+@media(max-width:560px){.form-two,.form-three,.form-four,.spec-grid,.map-coords{grid-template-columns:1fr}#listing-map{height:300px}.form-card{padding:17px;border-radius:18px}.create-hero h1{font-size:24px}}
+
+.contact-form-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;align-items:stretch}.contact-toggle-box{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 17px;border:1px solid #dfe9e4;border-radius:15px;background:linear-gradient(135deg,#f7fbf9,#fff)}.contact-toggle-box strong{display:block;font-size:13px}.contact-toggle-box small{display:block;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.8}.switch-row{display:flex!important;align-items:center;gap:8px;flex:0 0 auto!important;color:var(--green-dark)!important}.switch{position:relative;width:48px;height:28px;display:inline-block}.switch input{position:absolute;opacity:0;width:0!important;height:0!important;margin:0!important}.slider{position:absolute;inset:0;border-radius:30px;background:#cfd9d4;cursor:pointer;transition:.2s}.slider:before{content:"";position:absolute;width:22px;height:22px;right:3px;top:3px;background:#fff;border-radius:50%;box-shadow:0 2px 7px rgba(0,0,0,.15);transition:.2s}.switch input:checked + .slider{background:var(--green)}.switch input:checked + .slider:before{transform:translateX(-20px)}
+@media(max-width:700px){.contact-form-grid{grid-template-columns:1fr}.contact-toggle-box{align-items:flex-start}}
+.preview-modal{position:fixed;inset:0;background:rgba(10,30,22,.55);z-index:100000;display:grid;place-items:center;padding:18px}.preview-modal[hidden]{display:none}.preview-box{position:relative;width:min(620px,100%);background:#fff;border-radius:24px;padding:26px;box-shadow:0 20px 70px rgba(0,0,0,.2)}.preview-close{position:absolute;left:16px;top:12px;border:0;background:#f1f5f3;border-radius:50%;width:34px;height:34px;font-size:22px}.preview-box h2{margin:8px 0}.preview-price{font-weight:900;color:var(--green-dark);font-size:20px;margin:15px 0}.preview-note{background:#f6faf8;border-radius:12px;padding:11px;font-size:11px;color:var(--muted)}</style>
+{% endblock %}
+{% block content %}
+<section class="dashboard-page listing-create-page">
+  <div class="create-hero">
+    <div><span class="eyebrow">{{ "ویرایش آگهی" if edit_listing else "ثبت اجاره" }}</span><h1>{{ "ویرایش و ارسال مجدد" if edit_listing else "آگهی جدید" }}</h1><p>قبل از ارسال، پیش‌نمایش نهایی را بررسی کن.</p></div>
+    <div class="create-badge">بدون نیاز به Google Maps API Key</div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="listing-form" id="listing-create-form"><input type="hidden" name="edit_id" value="{{ edit_listing.id if edit_listing else '' }}">
+    <div class="form-card">
+      <h2>اطلاعات اصلی</h2>
+      <div class="form-two">
+        <label>عنوان آگهی<input name="title" value="{{ edit_listing.title if edit_listing else '' }}" required placeholder="مثلاً ویلای استخردار / کیا سراتو / PS5"></label>
+        <label>دسته‌بندی<select name="category" id="category" required>{% for c in categories %}<option value="{{ c.slug }}" {% if edit_listing and edit_listing.category==c.slug %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></label>
+      </div>
+      <div class="category-helper" id="category-helper"><strong>دسته انتخابی:</strong><span>اقامتگاه</span></div>
+      <label>توضیحات<textarea name="description" rows="5" required placeholder="توضیحات کامل، شرایط و نکات مهم آگهی...">{{ edit_listing.description if edit_listing else "" }}</textarea></label>
+      <label>تصاویر آگهی<input type="file" name="images" accept="image/jpeg,image/png,image/webp" multiple {% if not edit_listing %}required{% endif %}><small class="price-hint">حداقل یک تصویر لازم است؛ تصویر اول به‌عنوان تصویر اصلی نمایش داده می‌شود.</small></label>
+    </div>
+
+    <div class="form-card">
+      <h2>فرم تخصصی دسته</h2>
+      <p class="spec-title">فیلدهای مربوط به دسته انتخاب‌شده نمایش داده می‌شوند.</p>
+      <div class="spec-grid">
+        <label class="spec car equipment gaming camera">برند<input name="brand"></label>
+        <label class="spec car equipment gaming camera">مدل<input name="model"></label>
+
+        <label class="spec car">سال ساخت<input name="year" type="number" min="1900" max="2100"></label>
+        <label class="spec car">گیربکس<select name="gearbox"><option value="">انتخاب کنید</option><option>اتوماتیک</option><option>دستی</option></select></label>
+        <label class="spec car">سوخت<input name="fuel" placeholder="بنزین / گاز / هیبرید..."></label>
+        <label class="spec car">کارکرد (کیلومتر)<input name="kilometers" type="number" min="0"></label>
+        <label class="spec car">بیمه<input name="insurance" placeholder="دارد / ندارد"></label>
+        <label class="spec car">محدودیت کیلومتر<input name="mileage_limit" placeholder="مثلاً ۲۰۰ کیلومتر در روز"></label>
+        <label class="spec car">شرایط راننده<input name="driver_conditions" placeholder="حداقل سن، گواهینامه و... "></label>
+
+        <label class="spec gaming">نوع دستگاه<input name="device_type" placeholder="PS5 / Xbox / PC ..."></label>
+        <label class="spec gaming">ظرفیت / حافظه<input name="storage" placeholder="مثلاً 1TB"></label>
+        <label class="spec gaming">وضعیت<input name="item_condition" placeholder="نو / سالم / کارکرده"></label>
+        <label class="spec gaming">لوازم همراه<input name="included_items" placeholder="دسته اضافه، کابل و... "></label>
+
+        <label class="spec equipment">نوع وسیله<input name="equipment_type" placeholder="مثلاً دریل، صندلی، ابزار..."></label>
+        <label class="spec equipment">تعداد<input name="quantity" type="number" min="1"></label>
+        <label class="spec equipment">وضعیت<input name="item_condition" placeholder="نو / سالم / کارکرده"></label>
+        <label class="spec equipment">لوازم همراه<input name="included_items" placeholder="اقلام همراه"></label>
+
+        <label class="spec camera">نوع دوربین<input name="camera_type" placeholder="DSLR / Mirrorless / Action"></label>
+        <label class="spec camera">رزولوشن / مگاپیکسل<input name="megapixels" placeholder="مثلاً 24MP"></label>
+        <label class="spec camera">لنز / فاصله کانونی<input name="lens" placeholder="مثلاً 24-70mm"></label>
+        <label class="spec camera">حافظه<input name="camera_storage" placeholder="مثلاً 128GB"></label>
+        <label class="spec camera">لوازم همراه<input name="camera_accessories" placeholder="لنز، سه‌پایه، باتری و... "></label>
+        <label class="spec camera">وضعیت<input name="item_condition" placeholder="نو / سالم / کارکرده"></label>
+
+        <label class="spec stay">نوع اقامتگاه<input name="stay_type" placeholder="ویلا / سوئیت / آپارتمان / کلبه"></label>
+        <label class="spec stay">تعداد خواب<input name="stay_bedrooms" type="number" min="0"></label>
+        <label class="spec stay">تعداد حمام<input name="stay_bathrooms" type="number" min="0"></label>
+        <label class="spec stay">ظرفیت نفرات<input name="stay_capacity" type="number" min="1"></label>
+        <label class="spec stay">امکانات<input name="stay_amenities" placeholder="استخر، پارکینگ، اینترنت و... "></label>
+        <label class="spec stay">قوانین اقامت<input name="stay_rules" placeholder="سیگار، حیوان خانگی و... "></label>
+      </div>
+      <label>امکانات / ویژگی‌های عمومی<input name="amenities" placeholder="موارد مهمی که می‌خواهی در آگهی دیده شود"></label>
+      <label>قوانین و شرایط اجاره<textarea name="house_rules" rows="3" placeholder="شرایط تحویل، خسارت، مدارک لازم و... "></textarea></label>
+    </div>
+
+    <div class="form-card" id="pricing-card">
+      <h2>قیمت و شرایط رزرو <span id="pricing-category-title"></span></h2>
+      <p class="spec-title" id="pricing-help">قیمت‌گذاری و شرایط رزرو بر اساس دسته انتخابی تنظیم می‌شود.</p>
+      <div class="form-four">
+        <label>واحد اجاره<select name="rent_unit" id="rent_unit"><option value="day">روزانه</option><option value="hour">ساعتی</option></select></label>
+        <label><span id="base-price-label">قیمت پایه (تومان)</span><input name="price_per_night" id="price_per_night" type="number" min="0" value="{{ edit_listing.price_per_night if edit_listing else '' }}" required></label>
+        <label class="hourly-field">قیمت ساعتی (تومان)<input name="price_per_hour" id="price_per_hour" type="number" min="0" value="{{ edit_listing.price_per_hour if edit_listing else '' }}"></label>
+        <label class="weekly-field">قیمت هفتگی (تومان)<input name="price_per_week" type="number" min="0" value="{{ edit_listing.price_per_week if edit_listing else '' }}"></label>
+        <label class="weekend-field">قیمت آخر هفته (تومان)<input name="weekend_price" type="number" min="0" value="{{ edit_listing.weekend_price if edit_listing else '' }}"></label>
+        <label class="deposit-field">ودیعه / ضمانت (تومان)<input name="deposit" type="number" min="0" value="{{ edit_listing.deposit if edit_listing else '' }}"></label>
+        <label class="stay-only">ظرفیت کلی<input name="max_guests" type="number" min="1" value="{{ edit_listing.max_guests if edit_listing else 1 }}"></label>
+        <label class="stay-only">اتاق<input name="bedrooms" type="number" min="0" value="{{ edit_listing.bedrooms if edit_listing else 0 }}"></label>
+        <label class="stay-only">حمام<input name="bathrooms" type="number" min="0" value="{{ edit_listing.bathrooms if edit_listing else 0 }}"></label>
+        <label class="stay-only">ساعت ورود<input name="check_in_time" type="time" value="{{ edit_listing.check_in_time if edit_listing else '14:00' }}"></label>
+        <label class="stay-only">ساعت خروج<input name="check_out_time" type="time" value="{{ edit_listing.check_out_time if edit_listing else '12:00' }}"></label>
+        <label class="car-only">محدودیت کیلومتر<input name="mileage_limit" type="text" placeholder="مثلاً ۲۰۰ کیلومتر در روز"></label>
+        <label class="car-only">شرایط راننده<input name="driver_conditions" type="text" placeholder="حداقل سن، گواهینامه و..."></label>
+        <label class="rental-only">شرایط تحویل<input name="rental_delivery_conditions" type="text" placeholder="مثلاً تحویل با کارت ملی و ضمانت"></label>
+        <label class="rental-only">حداقل مدت رزرو<input name="minimum_rental_duration" type="text" placeholder="مثلاً حداقل ۱ روز یا ۳ ساعت"></label>
+        <label class="check-feature stay-only"><input type="checkbox" name="pets_allowed" value="1" {% if edit_listing and edit_listing.pets_allowed %}checked{% endif %}> حیوان خانگی مجاز</label>
+        <label class="check-feature stay-only"><input type="checkbox" name="party_allowed" value="1" {% if edit_listing and edit_listing.party_allowed %}checked{% endif %}> مهمانی مجاز</label>
+        <label class="check-feature stay-only"><input type="checkbox" name="parking" value="1" {% if edit_listing and edit_listing.parking %}checked{% endif %}> پارکینگ</label>
+        <label class="check-feature stay-only"><input type="checkbox" name="pool" value="1" {% if edit_listing and edit_listing.pool %}checked{% endif %}> استخر</label>
+        <label class="check-feature"><input type="checkbox" name="instant_book" value="1" {% if edit_listing and edit_listing.instant_book %}checked{% endif %}> رزرو فوری</label>
+      </div>
+      <div class="reservation-note" id="reservation-note"></div>
+    </div>
+
+    <div class="form-card contact-settings-card">
+      <h2>تماس با اجاره‌دهنده</h2>
+      <p class="spec-title">شماره‌ای را وارد کن که می‌خواهی کاربران برای هماهنگی اجاره با آن تماس بگیرند.</p>
+      <div class="contact-form-grid">
+        <label>شماره تماس اجاره‌دهنده
+          <input name="contact_phone" type="tel" inputmode="tel" autocomplete="tel" value="{{ (edit_listing.contact_phone if edit_listing and edit_listing.contact_phone else current_user.mobile) or '' }}" placeholder="مثلاً 0912xxxxxxx" required>
+        </label>
+        <div class="contact-toggle-box">
+          <div>
+            <strong>نمایش تماس با صاحب آگهی</strong>
+            <small>اگر فعال باشد، دکمه «تماس با صاحب آگهی» در صفحه آگهی نمایش داده می‌شود و با لمس آن شماره برای کاربر ظاهر می‌شود.</small>
+          </div>
+          <label class="switch-row" for="show-contact-phone">
+            <span class="switch">
+              <input id="show-contact-phone" type="checkbox" name="show_contact_phone" value="1" checked>
+              <span class="slider"></span>
+            </span>
+            <b>فعال</b>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h2>موقعیت مکانی</h2>
+      <div class="form-two">
+        <label>شهر<select name="city">{% for city in cities %}<option value="{{ city }}" {% if edit_listing and edit_listing.city==city %}selected{% endif %}>{{ city }}</option>{% endfor %}</select></label>
+        <label>منطقه<input name="area" value="{{ edit_listing.area if edit_listing else '' }}" placeholder="مثلاً کیانپارس"></label>
+      </div>
+      <label>آدرس<input name="address" value="{{ edit_listing.address if edit_listing else '' }}" placeholder="آدرس یا نشانی تقریبی"></label>
+      <p class="map-note">روی نقشه کلیک کن یا مارکر آبی را جابه‌جا کن. Latitude و Longitude ذخیره می‌شوند و در صفحه آگهی برای نمایش و مسیریابی استفاده می‌شوند.</p>
+      <div class="map-tools">
+        <button type="button" id="locate-me">📍 موقعیت فعلی من</button>
+        <button type="button" id="clear-point">حذف موقعیت</button>
+      </div>
+      <div id="listing-map" aria-label="انتخاب موقعیت آگهی روی نقشه"></div>
+      <div class="map-coords">
+        <label>Latitude<input id="latitude" name="latitude" value="{{ edit_listing.latitude if edit_listing else '' }}" inputmode="decimal" placeholder="مثلاً 32.3256"></label>
+        <label>Longitude<input id="longitude" name="longitude" value="{{ edit_listing.longitude if edit_listing else '' }}" inputmode="decimal" placeholder="مثلاً 48.6842"></label>
+      </div>
+      <div class="coord-status" id="coord-status">هنوز موقعیتی انتخاب نشده است.</div>
+    </div>
+
+    <div class="action-row">
+  <button class="btn btn-outline" type="button" id="preview-listing">👁️ پیش‌نمایش قبل از انتشار</button>
+  <button class="btn btn-primary form-submit" type="submit" style="flex:1">{{ "ویرایش و ارسال مجدد برای بررسی" if edit_listing else "ارسال آگهی برای بررسی" }}</button>
+</div>
+<div id="preview-modal" class="preview-modal" hidden><div class="preview-box"><button type="button" class="preview-close" id="preview-close">×</button><span class="eyebrow">پیش‌نمایش</span><h2 id="preview-title">عنوان آگهی</h2><p id="preview-location" class="muted"></p><p id="preview-description"></p><div class="preview-price" id="preview-price"></div><div class="preview-note">این همان اطلاعاتی است که قبل از بررسی مدیر ثبت می‌شود.</div></div></div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+(function(){
+ const form=document.getElementById('listing-create-form'), modal=document.getElementById('preview-modal');
+ const title=document.querySelector('[name=title]'), desc=document.querySelector('[name=description]'), city=document.querySelector('[name=city]'), price=document.querySelector('[name=price_per_night]');
+ document.getElementById('preview-listing')?.addEventListener('click',()=>{
+   document.getElementById('preview-title').textContent=title?.value||'بدون عنوان';
+   document.getElementById('preview-location').textContent=(city?.value||'')+' · جاکو';
+   document.getElementById('preview-description').textContent=desc?.value||'توضیحی ثبت نشده است.';
+   document.getElementById('preview-price').textContent=(price?.value ? Number(price.value).toLocaleString('fa-IR')+' تومان / شب' : 'قیمت ثبت نشده');
+   modal.hidden=false;
+ });
+ document.getElementById('preview-close')?.addEventListener('click',()=>modal.hidden=true);
+ modal?.addEventListener('click',e=>{if(e.target===modal)modal.hidden=true});
+})();
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(function(){
+  const mapEl=document.getElementById('listing-map');
+  if(!mapEl || typeof L==='undefined') return;
+  const initialLat={{ edit_listing.latitude|tojson if edit_listing else 'null' }}, initialLng={{ edit_listing.longitude|tojson if edit_listing else 'null' }}; const map=L.map(mapEl,{zoomControl:true}).setView([initialLat??32.40,initialLng??48.70], initialLat!==null&&initialLng!==null?15:8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+  let marker=null;
+  const latEl=document.getElementById('latitude'), lngEl=document.getElementById('longitude'), statusEl=document.getElementById('coord-status');
+  function updateStatus(lat,lng){statusEl.textContent='موقعیت ذخیره برای آگهی: '+lat.toFixed(6)+' , '+lng.toFixed(6);}
+  function setPoint(lat,lng,center){
+    lat=Number(lat); lng=Number(lng); if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
+    if(marker){marker.setLatLng([lat,lng]);}
+    else{
+      marker=L.marker([lat,lng],{draggable:true,title:'موقعیت آگهی'}).addTo(map);
+      marker.on('dragend',function(){const p=marker.getLatLng();setPoint(p.lat,p.lng,false);});
+    }
+    latEl.value=lat.toFixed(6); lngEl.value=lng.toFixed(6); updateStatus(lat,lng);
+    if(center) map.setView([lat,lng],15);
+  }
+  function clearPoint(){if(marker){map.removeLayer(marker);marker=null;}latEl.value='';lngEl.value='';statusEl.textContent='هنوز موقعیتی انتخاب نشده است.';}
+  map.on('click',e=>setPoint(e.latlng.lat,e.latlng.lng,true));
+  function sync(){const la=parseFloat(latEl.value),lo=parseFloat(lngEl.value);if(Number.isFinite(la)&&Number.isFinite(lo))setPoint(la,lo,true);}
+  latEl.addEventListener('change',sync);lngEl.addEventListener('change',sync);
+  document.getElementById('clear-point').addEventListener('click',clearPoint);
+  document.getElementById('locate-me').addEventListener('click',function(){
+    if(!navigator.geolocation){alert('مرورگر شما موقعیت مکانی را پشتیبانی نمی‌کند.');return;}
+    navigator.geolocation.getCurrentPosition(function(pos){setPoint(pos.coords.latitude,pos.coords.longitude,true);},function(){alert('دسترسی به موقعیت مکانی امکان‌پذیر نشد.');},{enableHighAccuracy:true,timeout:10000});
+  });
+  const sel=document.getElementById('category'), helper=document.getElementById('category-helper').querySelector('span');
+  function specs(){
+    const c=sel.value||'stay';
+    document.querySelectorAll('.spec').forEach(x=>{x.classList.add('hidden-spec');x.querySelectorAll('input,select,textarea').forEach(i=>i.disabled=true);});
+    document.querySelectorAll('.spec.'+CSS.escape(c)).forEach(x=>{x.classList.remove('hidden-spec');x.querySelectorAll('input,select,textarea').forEach(i=>i.disabled=false);});
+    const opt=sel.options[sel.selectedIndex]; helper.textContent=opt?opt.text:'دسته انتخابی';
+    const stay=c==='stay', car=c==='car', rental=['equipment','gaming','camera','events','camp','sport'].includes(c);
+    document.querySelectorAll('.stay-only').forEach(x=>x.classList.toggle('hidden-spec',!stay));
+    document.querySelectorAll('.car-only').forEach(x=>x.classList.toggle('hidden-spec',!car));
+    document.querySelectorAll('.rental-only').forEach(x=>x.classList.toggle('hidden-spec',!rental&&!car));
+    document.querySelector('.weekly-field').classList.toggle('hidden-spec',!['stay','car','equipment','gaming','camera'].includes(c));
+    document.querySelector('.weekend-field').classList.toggle('hidden-spec',!stay);
+    document.querySelector('.deposit-field').classList.toggle('hidden-spec',stay);
+    document.querySelector('.hourly-field').classList.toggle('hidden-spec',stay);
+    const unit=document.getElementById('rent_unit'), base=document.getElementById('base-price-label');
+    const title=document.getElementById('pricing-category-title'), help=document.getElementById('pricing-help'), note=document.getElementById('reservation-note');
+    unit.innerHTML=stay?'<option value="day">شبانه / روزانه</option>':'<option value="day">روزانه</option><option value="hour">ساعتی</option>';
+    if(stay){unit.value='day';base.textContent='قیمت هر شب (تومان)';help.textContent='اقامتگاه: قیمت شبانه، آخرهفته، ودیعه، ورود/خروج و قوانین اقامت.';note.textContent='شرایط رزرو این آگهی مخصوص دسته اقامتگاه است.';}
+    else if(car){unit.value='day';base.textContent='قیمت هر روز (تومان)';help.textContent='ماشین: قیمت روزانه/ساعتی، ودیعه، محدودیت کیلومتر و شرایط راننده.';note.textContent='محدودیت کیلومتر و شرایط راننده همراه آگهی ذخیره می‌شود.';}
+    else {base.textContent=unit.value==='hour'?'قیمت پایه هر ساعت (تومان)':'قیمت پایه هر روز (تومان)';help.textContent='قیمت و شرایط رزرو فقط برای دسته انتخاب‌شده ثبت می‌شود.';note.textContent='حداقل مدت رزرو و شرایط تحویل برای این دسته قابل ثبت است.';}
+    title.textContent='— '+(opt?opt.text:'');
+  }
+  sel.addEventListener('change',specs);specs();
+  document.getElementById('rent_unit').addEventListener('change',function(){if(sel.value!=='stay')document.getElementById('base-price-label').textContent=this.value==='hour'?'قیمت پایه هر ساعت (تومان)':'قیمت پایه هر روز (تومان)';});
+  setTimeout(()=>map.invalidateSize(),150);
+})();
+</script>
+{% endblock %}

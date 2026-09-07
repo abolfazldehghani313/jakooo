@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}تأیید شماره موبایل | جاکو{% endblock %}
+{% block content %}
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">جاکو <span>⌂</span></div>
+    <h1>تأیید شماره موبایل</h1>
+    <p class="auth-subtitle">کد ارسال‌شده به <b>{{ mobile }}</b> را وارد کنید.</p>
+    <form method="post" class="form-stack">
+      <label>کد تأیید OTP
+        <input name="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="5" placeholder="کد ۵ رقمی" required autofocus>
+      </label>
+      <button class="btn btn-primary full" type="submit">تأیید و ساخت حساب</button>
+    </form><form method="post" action="{{ url_for('register_resend_otp') }}" style="margin-top:10px"><button class="btn btn-outline full" type="submit">ارسال مجدد کد (پس از ۶۰ ثانیه)</button></form>
+    <p class="auth-bottom"><a href="{{ url_for('register') }}">بازگشت و اصلاح اطلاعات</a></p>
+  </div>
+</section>
+{% endblock %}

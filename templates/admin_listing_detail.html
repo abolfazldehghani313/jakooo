@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}بررسی آگهی #{{ listing.id }} | جاکو{% endblock %}
+{% block content %}
+<section class="container admin-listing-review-page">
+  <div class="review-toolbar">
+    <a class="btn btn-outline small" href="{{ url_for('admin_panel') }}#listings">← بازگشت به آگهی‌ها</a>
+    <span class="status-badge status-{{ listing.workflow_status or listing.status }}">{{ {'pending_review':'در انتظار بررسی','approved':'تأیید شده','rejected':'رد شده','needs_revision':'نیازمند اصلاح','expired':'منقضی شده'}.get(listing.workflow_status, listing.status) }}</span>
+  </div>
+
+  <div class="review-header panel-card">
+    <div>
+      <span class="eyebrow">بررسی آگهی #{{ listing.id }}</span>
+      <h1>{{ listing.title }}</h1>
+      <p class="muted">{{ listing.city }}{% if listing.area %}، {{ listing.area }}{% endif %}{% if listing.address %} · {{ listing.address }}{% endif %}</p>
+    </div>
+    <div class="review-actions">
+      {% if listing.workflow_status in ['pending_review','needs_revision'] or listing.status == 'pending' %}
+        <form method="post" action="{{ url_for('admin_listing_action',listing_id=listing.id,action='approve') }}"><button class="btn btn-success">✓ تأیید و انتشار</button></form>
+        <form method="post" action="{{ url_for('admin_listing_action',listing_id=listing.id,action='revision') }}" class="reject-form"><input name="reason" placeholder="دلیل نیاز به اصلاح" required><button class="btn btn-outline">🔧 درخواست اصلاح</button></form>
+        <form method="post" action="{{ url_for('admin_listing_action',listing_id=listing.id,action='reject') }}" class="reject-form"><input name="reason" placeholder="دلیل رد آگهی" required><button class="btn btn-danger">رد آگهی</button></form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="review-grid">
+    <div class="panel-card review-main">
+      <h2>تصاویر آگهی</h2>
+      <div class="review-gallery">
+        {% for image in listing.images %}<img src="{{ url_for('static',filename='uploads/'~image.filename) }}" alt="{{ listing.title }} — تصویر {{ loop.index }}">{% else %}<div class="empty-state">تصویری برای این آگهی ثبت نشده است.</div>{% endfor %}
+      </div>
+
+      <div class="review-section"><h2>توضیحات</h2><p class="review-description">{{ listing.description or 'بدون توضیحات' }}</p></div>
+
+      <div class="review-section"><h2>مشخصات و ویژگی‌های ثبت‌شده</h2>
+        <div class="review-spec-grid">
+          <div><span>دسته‌بندی</span><strong>{{ listing.category or '—' }}</strong></div>
+          <div><span>نوع اجاره</span><strong>{{ listing.rent_unit or '—' }}</strong></div>
+          <div><span>قیمت پایه</span><strong>{{ '{:,}'.format(listing.price_per_night or 0) }} تومان</strong></div>
+          <div><span>قیمت ساعتی</span><strong>{{ '{:,}'.format(listing.price_per_hour or 0) }} تومان</strong></div>
+          <div><span>قیمت هفتگی</span><strong>{{ '{:,}'.format(listing.price_per_week or 0) }} تومان</strong></div>
+          <div><span>آخر هفته</span><strong>{{ '{:,}'.format(listing.weekend_price or 0) }} تومان</strong></div>
+          <div><span>ودیعه</span><strong>{{ '{:,}'.format(listing.deposit or 0) }} تومان</strong></div>
+          <div><span>ظرفیت</span><strong>{{ listing.max_guests or 0 }} نفر</strong></div>
+          <div><span>اتاق</span><strong>{{ listing.bedrooms or 0 }}</strong></div>
+          <div><span>حمام</span><strong>{{ listing.bathrooms or 0 }}</strong></div>
+          <div><span>ورود</span><strong>{{ listing.check_in_time or '—' }}</strong></div>
+          <div><span>خروج</span><strong>{{ listing.check_out_time or '—' }}</strong></div>
+          <div><span>تلفن تماس</span><strong>{{ listing.contact_phone or '—' }}</strong></div>
+          <div><span>نمایش تلفن</span><strong>{{ 'فعال' if listing.show_contact_phone else 'غیرفعال' }}</strong></div>
+        </div>
+      </div>
+
+      {% if listing.detail_items %}<div class="review-section"><h2>جزئیات تخصصی دسته‌بندی</h2><div class="review-detail-list">{% for label,value in listing.detail_items %}<div><span>{{ label }}</span><strong>{{ value }}</strong></div>{% endfor %}</div></div>{% endif %}
+
+      <div class="review-section"><h2>امکانات عمومی</h2><div class="review-text-box">{{ listing.amenities or 'ثبت نشده' }}</div></div>
+      <div class="review-section"><h2>قوانین و شرایط</h2><div class="review-text-box">{{ listing.house_rules or 'ثبت نشده' }}</div></div>
+    </div>
+
+    <aside class="review-side">
+      <div class="panel-card"><h2>اطلاعات صاحب آگهی</h2><div class="host-review-card"><strong>{{ listing.host.full_name if listing.host else '—' }}</strong><span>{{ listing.host.mobile if listing.host else '—' }}</span><span>{{ listing.host.email if listing.host and listing.host.email else 'بدون ایمیل' }}</span><span>عضویت: {{ listing.host.created_at if listing.host else '—' }}</span></div></div>
+      <div class="panel-card"><h2>موقعیت</h2><div class="review-location"><strong>{{ listing.city or '—' }}{% if listing.area %}، {{ listing.area }}{% endif %}</strong><span>{{ listing.address or 'آدرس تقریبی ثبت نشده' }}</span>{% if listing.latitude and listing.longitude %}<span>{{ listing.latitude }}, {{ listing.longitude }}</span><a class="btn btn-outline small" target="_blank" rel="noopener" href="{{ google_maps_directions_url(listing) }}">باز کردن مسیر</a>{% endif %}</div></div>
+      <div class="panel-card"><h2>تاریخچه وضعیت</h2><div class="status-history">{% for h in history %}<div><strong>{{ {'pending_review':'در انتظار بررسی','approved':'تأیید شده','rejected':'رد شده','needs_revision':'نیازمند اصلاح','expired':'منقضی شده'}.get(h.status,h.status) }}</strong><small>{{ h.created_at }}{% if h.actor_name %} · {{ h.actor_name }}{% endif %}</small>{% if h.reason %}<p>{{ h.reason }}</p>{% endif %}</div>{% endfor %}</div></div>
+<div class="panel-card review-decision"><h2>تصمیم مدیر</h2><p>مدیر می‌تواند بعد از مشاهده <b>تمام تصاویر، قیمت‌ها، قوانین، امکانات، مشخصات تخصصی، موقعیت و اطلاعات تماس</b> آگهی را تأیید یا رد کند.</p>{% if listing.rejection_reason %}<div class="reject-note"><strong>دلیل رد:</strong><br>{{ listing.rejection_reason }}</div>{% endif %}</div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

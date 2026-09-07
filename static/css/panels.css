@@ -1,0 +1,40 @@
+
+/* Dashboard / Host / Admin panels */
+.dashboard-page{max-width:1180px;margin:0 auto;padding:40px 20px 100px}
+.dashboard-header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:28px}
+.dashboard-header h1{margin:6px 0;font-size:32px}.dashboard-header p{color:#777;margin:0}
+.eyebrow{color:#008b57;font-weight:700;font-size:14px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border:1px solid #e9eceb;border-radius:20px;padding:22px;box-shadow:0 6px 22px rgba(0,0,0,.04)}
+.stat-card span{display:block;color:#777;font-size:14px;margin-bottom:10px}.stat-card strong{font-size:24px;color:#087c4d}
+.dashboard-grid{display:grid;grid-template-columns:320px 1fr;gap:20px}.admin-layout{display:grid;grid-template-columns:280px 1fr;gap:20px}
+.panel-card{background:#fff;border:1px solid #e9eceb;border-radius:22px;padding:22px;box-shadow:0 6px 22px rgba(0,0,0,.04);margin-bottom:20px}
+.panel-card h2{font-size:19px;margin:0}.panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.panel-title a{color:#087c4d;text-decoration:none;font-weight:700}
+.management-menu,.admin-menu{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.management-menu a,.admin-menu a{padding:13px 15px;border-radius:12px;color:#333;text-decoration:none;transition:.2s}
+.management-menu a:hover,.admin-menu a:hover,.admin-menu a.active{background:#eaf8f2;color:#087c4d}
+.listing-table{display:flex;flex-direction:column}.table-row{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:15px 4px;border-bottom:1px solid #eee}
+.table-row:last-child{border-bottom:0}.table-row strong{display:block}.table-row small{display:block;color:#888;margin-top:5px}
+.status-badge{background:#eaf8f2;color:#087c4d;padding:6px 10px;border-radius:20px;font-size:12px}
+.empty-state{text-align:center;padding:45px 15px;color:#777}.empty-icon{font-size:42px;margin-bottom:10px}.empty-state h3{color:#333}
+.btn{display:inline-flex;align-items:center;justify-content:center;border:0;text-decoration:none;border-radius:14px;padding:12px 20px;font-weight:700;cursor:pointer}
+.btn-primary{background:#008b57;color:#fff}
+@media(max-width:800px){.stats-grid{grid-template-columns:repeat(2,1fr)}.dashboard-grid,.admin-layout{grid-template-columns:1fr}.dashboard-header{flex-direction:column;align-items:flex-start}}
+@media(max-width:480px){.stats-grid{grid-template-columns:1fr 1fr}.stat-card{padding:16px}.stat-card strong{font-size:19px}.dashboard-page{padding:25px 12px 80px}}
+
+/* BazaarPay payment settings */
+.payment-settings-page{max-width:900px}
+.gateway-status-card{display:flex;align-items:center;gap:15px;padding:18px 20px;border-radius:20px;margin-bottom:20px;border:1px solid #dfe7e3;background:#fff;box-shadow:0 6px 22px rgba(0,0,0,.04)}
+.gateway-status-card.gateway-active{border-color:#b9e8d3;background:#f3fcf8}.gateway-status-card.gateway-inactive{border-color:#eadfca;background:#fffaf0}
+.gateway-status-icon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:#eef5f2;color:#087c4d;flex:0 0 auto}
+.gateway-inactive .gateway-status-icon{color:#a06b00;background:#fff2d2}
+.gateway-status-icon svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gateway-status-card>div:nth-child(2){display:grid;gap:3px;flex:1}.gateway-status-card strong{font-size:16px}.gateway-status-card span{color:#77817d;font-size:12px}
+.gateway-status-pill{padding:6px 12px;border-radius:999px;background:#e9f8f1;color:#087c4d!important;font-size:12px!important;font-weight:800}.gateway-inactive .gateway-status-pill{background:#fff0cf;color:#916000!important}
+.payment-settings-card{padding:28px}.payment-settings-form{display:grid;gap:18px}.gateway-info-box{display:flex;gap:13px;padding:17px;border-radius:17px;background:#f5faf8;border:1px solid #dfeee8}.gateway-info-icon{width:42px;height:42px;flex:0 0 auto;display:grid;place-items:center;border-radius:12px;background:#e4f6ee;color:#087c4d}.gateway-info-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.gateway-info-box strong{display:block}.gateway-info-box p{margin:3px 0 0;color:#697570;font-size:12px}
+.settings-field{display:grid;gap:7px}.settings-field>span{font-size:13px;font-weight:800}.settings-field>span b{color:#d94a4a}.settings-field input{width:100%;border:1px solid #dfe7e3;background:#fff;border-radius:13px;padding:13px 14px;outline:0}.settings-field input:focus{border-color:#8dd4b5;box-shadow:0 0 0 3px #e9f8f1}.settings-field small{font-size:11px;color:#89938f}.field-success{color:#087c4d!important;font-weight:700}
+.gateway-switch{display:flex;align-items:center;gap:12px;padding:15px 16px;border:1px solid #dfe7e3;border-radius:15px;cursor:pointer;background:#fbfdfc}.gateway-switch>input{position:absolute;opacity:0;pointer-events:none}.switch-ui{width:48px;height:27px;border-radius:30px;background:#cfd8d4;position:relative;flex:0 0 auto;transition:.2s}.switch-ui:after{content:"";position:absolute;width:21px;height:21px;border-radius:50%;background:#fff;top:3px;right:3px;box-shadow:0 2px 5px rgba(0,0,0,.15);transition:.2s}.gateway-switch>input:checked+.switch-ui{background:#078f5b}.gateway-switch>input:checked+.switch-ui:after{transform:translateX(-21px)}.gateway-switch span:last-child{display:grid;gap:2px}.gateway-switch small{font-size:11px;color:#89938f}.danger-check{display:flex;align-items:center;gap:8px;color:#b33b3b;font-size:12px}.danger-check input{accent-color:#d94a4a}
+.gateway-actions{display:flex;gap:10px;flex-wrap:wrap;padding-top:4px}.gateway-guide-card{padding:24px}.gateway-guide-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.gateway-guide-grid>div{display:flex;gap:10px;align-items:center;padding:14px;border:1px solid #e8ecea;border-radius:14px}.gateway-guide-grid b{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:#e9f8f1;color:#087c4d}.gateway-guide-grid span{font-size:12px}.gateway-security-note{margin:16px 0 0;padding:13px 15px;border-radius:13px;background:#fff8e8;color:#765a16;font-size:11px}
+.admin-menu-icon svg,.drawer-icon svg,.title-icon svg,.btn-icon svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:600px){.gateway-status-card{align-items:flex-start}.gateway-status-pill{margin-right:auto}.payment-settings-card{padding:18px}.gateway-guide-grid{grid-template-columns:1fr}.gateway-actions .btn{width:100%}}

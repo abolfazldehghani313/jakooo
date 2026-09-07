@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}ویرایش پروفایل | جاکو{% endblock %}
+{% block content %}
+<section class="container" style="max-width:720px;padding:40px 18px 100px">
+  <div class="panel-card">
+    <span class="eyebrow">حساب کاربری</span><h1>ویرایش پروفایل</h1>
+    <form method="post" enctype="multipart/form-data" class="form-stack" style="margin-top:20px">
+      <label>نام و نام خانوادگی<input name="full_name" value="{{ user.full_name or '' }}" required></label>
+      <label>ایمیل<input type="email" name="email" value="{{ user.email or '' }}" placeholder="example@email.com"></label>
+      <label>عکس پروفایل میزبان
+        <input type="file" name="profile_photo" accept=".jpg,.jpeg,.png,.webp">
+        <small class="muted">عکس مربعی و واضح بهتر نمایش داده می‌شود.</small>
+      </label>
+      {% if user.profile_photo %}<div style="display:flex;align-items:center;gap:12px"><img src="{{ url_for('static', filename='uploads/' ~ user.profile_photo) }}" style="width:76px;height:76px;border-radius:50%;object-fit:cover" alt="عکس پروفایل"><span class="muted">عکس فعلی</span></div>{% endif %}
+      <div class="action-row"><button class="btn btn-primary" type="submit">ذخیره تغییرات</button><a class="btn btn-outline" href="{{ url_for('profile') }}">انصراف</a></div>
+    </form>
+  </div>
+</section>
+{% endblock %}

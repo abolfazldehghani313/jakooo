@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}علاقه‌مندی‌ها | جاکو{% endblock %}
+{% block content %}
+<section class="container page-section">
+    <div class="page-heading"><span class="eyebrow">حساب کاربری</span><h1>علاقه‌مندی‌های من ♡</h1><p>آگهی‌هایی که برای بعد ذخیره کرده‌اید.</p></div>
+    <div class="listing-grid">
+        {% for favorite in favorites %}
+        {% set listing = favorite.listing %}
+        <article class="listing-card">
+            <a href="{{ url_for('listing_detail', listing_id=listing.id) }}" class="listing-photo">
+                {% if listing.images and listing.images|length %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ listing.images[0].filename) }}" alt="{{ listing.title }}">
+                {% else %}<div class="photo-placeholder">⌂</div>{% endif %}
+                <span class="rating-badge">★ {{ listing.rating }}</span>
+            </a>
+            <div class="listing-body">
+                <h3><a href="{{ url_for('listing_detail', listing_id=listing.id) }}">{{ listing.title }}</a></h3>
+                <p class="muted">{{ listing.city }}</p>
+                <div class="price">{{ "{:,}".format(listing.price_per_night) }} <small>تومان / شب</small></div>
+                <form method="post" action="{{ url_for('toggle_favorite', listing_id=listing.id) }}">
+                    <button class="btn btn-outline full" type="submit">حذف از علاقه‌مندی‌ها</button>
+                </form>
+            </div>
+        </article>
+        {% else %}
+        <div class="empty-state wide"><div class="empty-icon">♡</div><h3>لیست علاقه‌مندی‌ها خالی است</h3><p>اقامتگاه‌های موردعلاقه‌ات را ذخیره کن تا بعداً راحت پیدایشان کنی.</p><a class="btn btn-primary" href="{{ url_for('search') }}">جستجوی آگهی</a></div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

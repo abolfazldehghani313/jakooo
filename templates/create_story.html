@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}ساخت استوری | جاکو{% endblock %}
+{% block content %}
+<div class="dashboard-page"><div class="form-card story-create-card">
+<div><span class="eyebrow">تبلیغات استوری</span><h1>ساخت استوری</h1><p class="muted">تا پرداخت موفق انجام نشود استوری منتشر نمی‌شود. پس از تأیید، تایمر از زمان فعال‌شدن شروع می‌شود.</p></div>
+<div class="ad-price-grid story-price-grid">
+{% for hours,price in story_prices.items() %}<div class="ad-price-card"><span class="ad-price-hours">{{ story_price_labels[hours] }}</span><strong>{{ '{:,}'.format(price) }}</strong><small>تومان</small></div>{% endfor %}
+</div>
+<form method="post" enctype="multipart/form-data" class="form-stack">
+<label>تصویر یا ویدئوی معرفی<input type="file" name="image" accept="image/*,video/*" required></label>
+<label>اقامتگاه مرتبط<select name="listing_id"><option value="">بدون انتخاب</option>{% for l in listings %}<option value="{{ l.id }}">{{ l.title }}</option>{% endfor %}</select></label>
+<label>مدت نمایش<select name="duration_hours">{% for hours,price in story_prices.items() %}<option value="{{ hours }}">{{ story_price_labels[hours] }} — {{ '{:,}'.format(price) }} تومان</option>{% endfor %}</select></label>
+<label>متن استوری<textarea name="caption" rows="4" placeholder="مثلاً امروز تخفیف ویژه داریم..."></textarea></label>
+<button class="btn btn-primary large-submit" type="submit">ادامه و پرداخت</button>
+</form></div></div>
+{% endblock %}

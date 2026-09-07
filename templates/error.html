@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}خطا {{ code }} | جاکو{% endblock %}
+{% block content %}
+<section class="container" style="padding:70px 20px;text-align:center">
+  <div class="panel-card" style="max-width:620px;margin:auto">
+    <div style="font-size:56px;font-weight:800">{{ code }}</div>
+    <h1>{{ message }}</h1>
+    <p class="muted">اگر مشکل ادامه داشت، از بخش پشتیبانی با ما در ارتباط باشید.</p>
+    <a class="btn btn-primary" href="{{ url_for('index') }}">بازگشت به صفحه اصلی</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}رزروهای من | جاکو{% endblock %}
+{% block content %}
+<section class="container page-section">
+    <div class="page-heading"><span class="eyebrow">حساب کاربری</span><h1>رزروهای من</h1><p>وضعیت درخواست‌های رزرو خود را اینجا ببینید.</p></div>
+    <div class="booking-list">
+        {% for booking in bookings %}
+        <article class="booking-item">
+            <div>
+                <span class="eyebrow">رزرو #{{ booking.id }}</span>
+                <h3>{{ booking.listing.title }}</h3>
+                <p class="muted">{{ booking.listing.city }} · ورود: {{ booking.check_in }} · خروج: {{ booking.check_out }}</p>
+            </div>
+            <div class="booking-side">
+                <strong>{{ "{:,}".format(booking.total_price) }} تومان</strong>
+                <span class="status status-{{ booking.status }}">{{ booking.status }}</span>
+                <a href="{{ url_for('listing_detail', listing_id=booking.listing_id) }}">مشاهده اقامتگاه ←</a>
+            </div>
+            {% if booking.status in ['pending','confirmed'] %}
+            <form method="post" action="{{ url_for('cancel_booking', booking_id=booking.id) }}" onsubmit="return confirm('لغو رزرو انجام شود؟')">
+              <input type="hidden" name="reason" value="لغو توسط کاربر">
+              <button class="btn btn-danger small" type="submit">لغو رزرو</button>
+            </form>
+            {% endif %}
+        </article>
+        {% else %}
+        <div class="empty-state"><div class="empty-icon">▣</div><h3>هنوز رزروی ندارید</h3><p>اقامتگاه موردنظرتان را پیدا کنید و درخواست رزرو بدهید.</p><a class="btn btn-primary" href="{{ url_for('search') }}">جستجوی اقامتگاه</a></div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}تبلیغات | جاکو{% endblock %}
+{% block content %}
+<div class="dashboard-page ads-dashboard">
+<div class="dashboard-header"><div><span class="eyebrow">رشد فروش</span><h1>تبلیغات قابل کلیک</h1><p>کاربر با کلیک روی تبلیغ مستقیماً به صفحه اقامتگاه انتخابی می‌رود.</p></div></div>
+<section class="panel-card ad-pricing-panel"><div class="panel-title"><h2>تعرفه تبلیغات</h2></div><div class="ad-price-grid">{% for hours,price in ad_prices.items() %}<div class="ad-price-card"><span class="ad-price-hours">{{ ad_price_labels[hours] }}</span><strong>{{ '{:,}'.format(price) }}</strong><small>تومان</small></div>{% endfor %}</div></section>
+<section class="panel-card"><div class="panel-title"><h2>ساخت تبلیغ</h2></div>
+{% if listings %}<form method="post" action="{{ url_for('create_ad') }}" enctype="multipart/form-data" class="form-stack" id="ad-create-form">
+<label>عنوان تبلیغ<input name="title" maxlength="120" placeholder="مثلاً تخفیف ویژه اقامتگاه ما"></label>
+<label>تصویر تبلیغ<input type="file" name="image" accept="image/*"></label>
+<label>اقامتگاه مقصد<select name="listing_id" required>{% for l in listings %}<option value="{{ l.id }}">{{ l.title }}</option>{% endfor %}</select><small>لینک مقصد به‌صورت خودکار ساخته می‌شود و نیازی به وارد کردن URL نیست.</small></label>
+<label>جایگاه<select name="placement"><option value="featured">ویژه صفحه اصلی</option><option value="search">بالای نتایج جستجو</option><option value="banner">بنر</option></select></label>
+<label>مدت تبلیغ<select name="duration_hours">{% for hours,price in ad_prices.items() %}<option value="{{ hours }}">{{ ad_price_labels[hours] }} — {{ '{:,}'.format(price) }} تومان</option>{% endfor %}</select></label>
+<div class="ad-total-box"><span>مبلغ قابل پرداخت</span><strong id="ad-total">{{ '{:,}'.format(ad_prices[1]) }} تومان</strong></div>
+<button class="btn btn-primary large-submit" type="submit">ادامه و پرداخت</button>
+</form>{% else %}<div class="empty-state">ابتدا یک اقامتگاه منتشرشده داشته باش.</div>{% endif %}</section>
+<section class="panel-card"><div class="panel-title"><h2>کمپین‌های من</h2></div>
+{% for a in ads %}<div class="table-row ad-history-row"><div><strong>{{ a.title or ('تبلیغ اقامتگاه #' ~ a.listing_id) }}</strong><small>{{ a.duration_hours or 1 }} ساعت · {{ '{:,}'.format(a.price or 0) }} تومان · {{ a.clicks }} کلیک / {{ a.impressions }} نمایش</small></div><div class="inline-actions"><span class="status-badge status-{{ a.status }}">{{ 'در انتظار تأیید' if a.status=='pending' else 'فعال' if a.status=='active' else 'رد شده' if a.status=='rejected' else 'منقضی' }}</span>{% if a.ends_at %}<span class="countdown" data-end="{{ a.ends_at }}">در حال محاسبه...</span>{% endif %}</div></div>{% else %}<div class="empty-state">هنوز کمپینی نداری.</div>{% endfor %}
+</section></div>
+{% endblock %}
+{% block head %}<script>
+document.addEventListener('DOMContentLoaded',()=>{const s=document.querySelector('#ad-create-form select[name="duration_hours"]'),t=document.getElementById('ad-total');if(s&&t){const u=()=>{const p=Number(s.options[s.selectedIndex].text.replace(/[^0-9]/g,''));t.textContent=p.toLocaleString('fa-IR')+' تومان'};s.onchange=u;u();}document.querySelectorAll('.countdown').forEach(el=>{function tick(){let sec=Math.max(0,Math.floor((new Date(el.dataset.end.replace(' ','T'))-new Date())/1000));const h=Math.floor(sec/3600);sec%=3600;const m=Math.floor(sec/60);sec%=60;el.textContent=`⏳ ${h}س ${m}د ${sec}ث`;if(h===0&&m===0&&sec===0)location.reload();}tick();setInterval(tick,1000);});});
+</script>{% endblock %}

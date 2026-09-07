@@ -1,0 +1,19 @@
+{
+  "name": "جاکو",
+  "short_name": "جاکو",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#087d50",
+  "dir": "rtl",
+  "lang": "fa",
+  "icons": [
+    {
+      "src": "/static/images/placeholder.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

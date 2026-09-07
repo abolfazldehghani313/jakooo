@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}تیکت #{{ ticket.id }} | جاکو{% endblock %}
+{% block content %}
+<div class="dashboard-page"><section class="panel-card narrow-panel">
+  <div class="panel-title"><div><span class="eyebrow">{{ ticket.category }}</span><h2>#{{ ticket.id }} · {{ ticket.subject }}</h2></div><span class="status-badge">{{ 'باز' if ticket.status=='open' else 'بسته' }}</span></div>
+  <div class="support-thread">
+    {% for m in messages %}<div class="support-message {{ 'mine' if m.sender_id==current_user.id else 'staff' }}"><strong>{{ m.sender_name }}</strong><small>{{ m.created_at }}</small><p>{{ m.body }}</p></div>{% endfor %}
+  </div>
+  {% if ticket.status!='closed' %}
+  <form method="post" class="support-reply-form"><input name="body" placeholder="پاسخ شما..." required><button class="btn btn-primary">ارسال</button></form>
+  {% endif %}
+</section></div>
+{% endblock %}

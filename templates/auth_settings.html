@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}تنظیمات احراز هویت | جاکو{% endblock %}
+{% block content %}
+<div class="dashboard-page">
+  <div class="dashboard-header"><div><span class="eyebrow">امنیت و پیامک</span><h1>تنظیمات احراز هویت</h1><p>تنظیمات سرویس پیامکی و کد ورود جاکو را از اینجا مدیریت کن.</p></div></div>
+
+  <section class="panel-card auth-settings-card">
+    <div class="panel-title"><h2>لینک ورود اضطراری</h2></div>
+    <p class="warning-box">این لینک محرمانه است و نباید در اختیار دیگران قرار گیرد. آن را فقط در یک محل امن نگهداری کن.</p>
+    <label class="settings-field"><span>لینک ورود اضطراری</span><input type="url" name="sms_emergency_login_url" value="{{ settings.get('sms_emergency_login_url','') }}" placeholder="لینک اضطراری سرویس پیامکی" form="auth-settings-form"><small>برای امنیت، این مقدار فقط در پنل مدیر قابل مشاهده است.</small></label>
+  </section>
+
+  <form id="auth-settings-form" method="post">
+  <section class="panel-card auth-settings-card">
+    <div class="panel-title"><h2>تنظیمات پیامک</h2></div>
+    <label class="settings-field"><span>پنل پیامکی</span><select name="sms_provider"><option value="sms.ir" {% if settings.get('sms_provider','sms.ir')=='sms.ir' %}selected{% endif %}>sms.ir</option></select></label>
+
+    {% for key,label in [
+      ('sms_cron_enabled','ارسال پیامک‌ها با کرون جاب'),
+      ('sms_saving_enabled','صرفه‌جویی در ارسال پیامک'),
+      ('sms_listing_approve_enabled','ارسال پیامک تأیید آگهی'),
+      ('sms_listing_reject_enabled','ارسال پیامک رد آگهی'),
+      ('sms_new_listing_admin_enabled','ارسال پیامک آگهی جدید به مدیریت'),
+      ('sms_listing_renew_enabled','ارسال پیامک یادآوری تمدید آگهی')
+    ] %}
+    <label class="gateway-switch"><input type="checkbox" name="{{ key }}" value="1" {% if settings.get(key)=='1' %}checked{% endif %}><span class="switch-ui"></span><span><strong>{{ label }}</strong><small>فعال / غیرفعال</small></span></label>
+    {% endfor %}
+
+    <label class="settings-field"><span>کد API وب‌سرویس سایت sms.ir</span><input type="password" name="sms_api_key" value="{{ settings.get('sms_api_key','') }}" autocomplete="new-password"><small>کلید API را فقط در همین پنل وارد کن و در اختیار دیگران قرار نده.</small></label>
+    <label class="settings-field"><span>شناسه قالب کد ورود</span><input type="number" name="sms_otp_template_id" value="{{ settings.get('sms_otp_template_id','') }}" placeholder="شناسه قالب"><small>نمونه قالب: کد تایید شما #OTPCODE#</small></label>
+
+    <div class="panel-title"><h2>پترن‌های پرداخت امن</h2></div>
+    {% for key,label,example in [
+      ('sms_secure_accept_template_id','شناسه قالب پذیرش پرداخت امن','خریدار گرامی، پرداخت امن برای آگهی #AD_NAME# پذیرفته شد'),
+      ('sms_secure_reject_template_id','شناسه قالب رد پرداخت امن','خریدار گرامی، پرداخت امن برای آگهی #AD_NAME# رد شد'),
+      ('sms_secure_new_template_id','شناسه قالب اطلاع پرداخت امن جدید','فروشنده گرامی، درخواست پرداخت امن جدیدی برای آگهی #AD_NAME# دریافت شد'),
+      ('sms_secure_complaint_template_id','شناسه قالب شکایت از فروشنده','فروشنده گرامی، شکایتی در مورد آگهی #AD_NAME# ثبت شده است')
+    ] %}
+    <label class="settings-field"><span>{{ label }}</span><input type="number" name="{{ key }}" value="{{ settings.get(key,'') }}"><small>{{ example }}</small></label>
+    {% endfor %}
+
+    <button class="btn btn-primary large-submit" type="submit">ثبت تغییرات</button>
+  </section>
+  </form>
+
+  <section class="panel-card auth-settings-card">
+    <div class="panel-title"><h2>تست ارسال OTP</h2></div>
+    <p class="muted">یک کد تصادفی ارسال می‌شود و فقط وضعیت و پارامترهای غیرحساس پاسخ API نمایش داده می‌شود.</p>
+    <form id="otp-test-form" class="form-two">
+      <label>شماره موبایل<input name="mobile" placeholder="09123456789" required></label>
+      <button class="btn btn-outline" type="submit">ارسال کد</button>
+    </form>
+    <pre id="otp-result" class="api-result"></pre>
+  </section>
+</div>
+{% endblock %}
+{% block head %}
+<style>.warning-box{background:#fff7df;border:1px solid #f1d27b;padding:14px;border-radius:14px}.api-result{white-space:pre-wrap;background:#f7f9f8;border-radius:14px;padding:14px;margin-top:14px;direction:ltr;text-align:left}</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+ const f=document.getElementById('otp-test-form'), out=document.getElementById('otp-result');
+ f?.addEventListener('submit',async e=>{e.preventDefault();out.textContent='در حال ارسال...';const body=new URLSearchParams(new FormData(f));const r=await fetch('{{ url_for("admin_auth_test_otp") }}',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});const d=await r.json();out.textContent=JSON.stringify(d,null,2);});
+});
+</script>
+{% endblock %}

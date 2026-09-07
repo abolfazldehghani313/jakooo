@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}تیک آبی | جاکو{% endblock %}
+{% block content %}
+<section class="dashboard-page blue-tick-page">
+<div class="dashboard-header"><div><span class="eyebrow">خدمات ویژه</span><h1>تیک آبی <span class="verified-tick large">✓</span></h1><p>تیک آبی یک سرویس اشتراکی پولی است و فقط پس از پرداخت موفق فعال می‌شود.</p></div></div>
+{% if blue_tick_active %}<div class="notice success">🔵 تیک آبی شما فعال است. تاریخ پایان: {{ current_user.blue_tick_ends_at }}</div>{% endif %}
+<div class="cards-grid">
+{% for p in plans %}
+<div class="panel-card"><h2>{{p.name}} 🔵</h2><p>{{p.description or ''}}</p><strong>{{"{:,}".format(p.price)}} تومان</strong><p>{{p.duration_days}} روز</p>
+<form method="post" action="{{url_for('buy_blue_tick',plan_id=p.id)}}"><button class="btn btn-primary full" type="submit">پرداخت و فعال‌سازی</button></form>
+</div>
+{% else %}<div class="panel-card"><p>در حال حاضر پلن فعالی وجود ندارد.</p></div>{% endfor %}
+</div>
+{% if purchases %}<div class="panel-card"><h2>سوابق تیک آبی</h2>{% for x in purchases %}<div class="table-row"><span>{{x.plan_name}}</span><span>{{x.status}}</span><span>{{x.starts_at}} تا {{x.ends_at}}</span></div>{% endfor %}</div>{% endif %}
+</section>
+{% endblock %}

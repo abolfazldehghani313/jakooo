@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}تنظیمات درگاه پرداخت | جاکو{% endblock %}
+{% block content %}
+<div class="dashboard-page payment-settings-page">
+  <div class="dashboard-header">
+    <div>
+      <span class="eyebrow">مدیریت مالی</span>
+      <h1>تنظیمات درگاه پرداخت</h1>
+      <p>توکن بازارپی را فقط یک‌بار اینجا وارد کن؛ پرداخت‌های اشتراک و تبلیغات از همین تنظیمات استفاده می‌کنند.</p>
+    </div>
+  </div>
+
+  <div class="gateway-status-card {% if gateway.configured %}gateway-active{% else %}gateway-inactive{% endif %}">
+    <div class="gateway-status-icon">
+      {% if gateway.configured %}
+      <svg viewBox="0 0 24 24"><path d="M5 12.5 9.2 17 19 7"/></svg>
+      {% else %}
+      <svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17"/></svg>
+      {% endif %}
+    </div>
+    <div>
+      <strong>{{ 'درگاه بازارپی فعال است' if gateway.configured else 'درگاه بازارپی غیرفعال است' }}</strong>
+      <span>{{ 'پرداخت آنلاین آماده استفاده است.' if gateway.configured else 'توکن را وارد کن و گزینه فعال‌سازی را روشن کن.' }}</span>
+    </div>
+    <span class="gateway-status-pill">{{ 'فعال' if gateway.configured else 'غیرفعال' }}</span>
+  </div>
+
+  <section class="panel-card payment-settings-card">
+    <div class="panel-title">
+      <div>
+        <h2><span class="title-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M7 15h4"/><circle cx="17" cy="15" r="1"/></svg></span>اتصال به BazaarPay</h2>
+        <p class="muted">اطلاعات زیر فقط توسط مدیر قابل تغییر است.</p>
+      </div>
+    </div>
+
+    <form method="post" class="payment-settings-form" autocomplete="off">
+      <div class="gateway-info-box">
+        <div class="gateway-info-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M12 8v5M12 17h.01"/></svg></div>
+        <div>
+          <strong>توکن پذیرنده بازارپی</strong>
+          <p>توکن را اینجا وارد کن. توکن در صفحه نمایش داده نمی‌شود و در فرم‌های پرداخت هم قرار نمی‌گیرد؛ فقط سمت سرور برای ارتباط با API بازارپی استفاده می‌شود.</p>
+        </div>
+      </div>
+
+      <label class="settings-field">
+        <span>BAZAARPAY TOKEN <b>*</b></span>
+        <input type="password" name="bazaarpay_token" value="" placeholder="{{ 'توکن فعلی ثبت شده است — برای تغییر، توکن جدید را وارد کن' if gateway.token else 'توکن بازارپی را وارد کنید' }}" autocomplete="new-password" spellcheck="false">
+        {% if gateway.token %}<small class="field-success">توکن فعلی: {{ gateway.token[:4] }}••••••••{{ gateway.token[-4:] if gateway.token|length > 8 else '' }}</small>{% else %}<small>اگر خالی بگذاری، توکن قبلی حفظ می‌شود.</small>{% endif %}
+      </label>
+
+      <label class="settings-field">
+        <span>BAZAARPAY DESTINATION <b>*</b></span>
+        <input type="text" name="bazaarpay_destination" value="{{ gateway.destination }}" placeholder="jako" required>
+        <small>نام یکتای مرچنت در بازارپی.</small>
+      </label>
+
+      <label class="settings-field">
+        <span>ضریب مبلغ</span>
+        <input type="number" name="bazaarpay_amount_multiplier" min="1" step="1" value="{{ gateway.amount_multiplier }}" required>
+        <small>اگر قیمت‌های جاکو تومان است و بازارپی مبلغ را ریال می‌خواهد، مقدار را ۱۰ قرار بده.</small>
+      </label>
+
+      <label class="gateway-switch">
+        <input type="checkbox" name="bazaarpay_enabled" value="1" {% if gateway.enabled %}checked{% endif %}>
+        <span class="switch-ui"></span>
+        <span><strong>فعال‌سازی درگاه بازارپی</strong><small>پس از فعال‌سازی، خرید اشتراک و تبلیغات به بازارپی هدایت می‌شوند.</small></span>
+      </label>
+
+      {% if gateway.token %}
+      <label class="danger-check">
+        <input type="checkbox" name="clear_bazaarpay_token" value="1">
+        <span>توکن ذخیره‌شده حذف شود</span>
+      </label>
+      {% endif %}
+
+      <div class="gateway-actions"><button class="btn btn-outline" type="button" id="test-bazaarpay">🟢 تست اتصال به BazaarPay</button>
+        <button class="btn btn-primary large-submit" type="submit"><span class="btn-icon"><svg viewBox="0 0 24 24"><path d="M5 12.5 9.2 17 19 7"/></svg></span>ذخیره و فعال‌سازی</button>
+        <a class="btn btn-outline" href="{{ url_for('admin_panel') }}">بازگشت به پنل مدیریت</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel-card gateway-guide-card">
+    <div class="panel-title"><h2><span class="title-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg></span>نحوه کار</h2></div>
+    <div class="gateway-guide-grid">
+      <div><b>۱</b><span>توکن پذیرنده را وارد کن.</span></div>
+      <div><b>۲</b><span>Destination را مطابق قرارداد بازارپی تنظیم کن.</span></div>
+      <div><b>۳</b><span>درگاه را فعال کن و ذخیره بزن.</span></div>
+      <div><b>۴</b><span>هنگام پرداخت، جاکو Checkout را ایجاد می‌کند و کاربر به بازارپی منتقل می‌شود.</span></div>
+    </div>
+    <p class="gateway-security-note">طبق مستندات رسمی بازارپی، توکن Authorization باید از کاربران و سمت کلاینت محافظت شود؛ این نسخه توکن را در سمت سرور نگه می‌دارد.</p>
+  </section>
+</div>
+{% endblock %}
+
+{% block head %}
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+ const b=document.getElementById('test-bazaarpay'); if(!b)return;
+ b.addEventListener('click',async function(){
+  b.disabled=true; b.textContent='در حال تست...';
+  try{
+   const r=await fetch('{{ url_for("admin_payment_settings_test") }}',{method:'POST'});
+   const d=await r.json(); alert((d.ok?'✅ ':'❌ ')+(d.message||'')+(d.status?'\nHTTP: '+d.status:''));
+  }catch(e){alert('❌ خطا در اتصال به سرور جاکو');}
+  b.disabled=false; b.textContent='🟢 تست اتصال به BazaarPay';
+ });
+});
+</script>
+{% endblock %}

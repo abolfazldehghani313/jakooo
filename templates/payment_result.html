@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}نتیجه پرداخت | جاکو{% endblock %}
+{% block content %}
+<div class="dashboard-page">
+  <section class="panel-card payment-result-card">
+    <div class="payment-result-icon {% if payment.status in ['paid','committed'] %}success{% else %}failed{% endif %}">
+      {% if payment.status in ['paid','committed'] %}
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 9.2 17 19 7"/></svg>
+      {% else %}
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg>
+      {% endif %}
+    </div>
+    <h1>{% if payment.status in ['paid','committed'] %}پرداخت موفق بود{% else %}پرداخت نهایی نشد{% endif %}</h1>
+    <p class="muted">مبلغ: <strong>{{ '{:,}'.format(payment.amount or 0) }} تومان</strong></p>
+    {% if payment.ref %}<p class="muted">کد پیگیری جاکو: <b>{{ payment.ref }}</b></p>{% endif %}
+    {% if payment.gateway_status %}<p class="muted">وضعیت بازارپی: {{ payment.gateway_status }}</p>{% endif %}
+    <a class="btn btn-primary full" href="{{ target }}">بازگشت</a>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}پروفایل من | جاکو{% endblock %}
+
+{% block head %}
+<style>
+.profile-page{max-width:1180px;margin:0 auto;padding:40px 20px 110px}
+.profile-hero{background:linear-gradient(135deg,#087c4d,#00a66a);color:#fff;border-radius:28px;padding:30px;display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:22px}
+.profile-user{display:flex;align-items:center;gap:18px}.profile-avatar{width:78px;overflow:hidden;height:78px;border-radius:50%;background:#fff;color:#087c4d;display:grid;place-items:center;font-size:34px;font-weight:800}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}.profile-hero h1{margin:0 0 7px;font-size:28px}.profile-hero p{margin:0;opacity:.9}
+.profile-edit{background:#fff;color:#087c4d;text-decoration:none;padding:11px 18px;border-radius:13px;font-weight:700}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+.profile-stat{background:#fff;border:1px solid #e8ecea;border-radius:20px;padding:22px;text-align:center;box-shadow:0 5px 20px rgba(0,0,0,.04)}
+.profile-stat strong{display:block;font-size:28px;color:#087c4d;margin-bottom:5px}.profile-stat span{color:#777}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.profile-card{background:#fff;border:1px solid #e8ecea;border-radius:22px;padding:24px;box-shadow:0 5px 20px rgba(0,0,0,.04)}
+.profile-card h2{font-size:19px;margin:0 0 18px}.profile-row{display:flex;justify-content:space-between;gap:15px;padding:14px 0;border-bottom:1px solid #eee}
+.profile-row:last-child{border-bottom:0}.profile-row span:first-child{color:#777}.profile-row strong{direction:rtl}
+.profile-menu{display:grid;gap:9px}.profile-menu a{display:flex;justify-content:space-between;align-items:center;padding:14px 15px;background:#f7faf8;border-radius:13px;color:#222;text-decoration:none}.profile-menu a:hover{background:#eaf8f2;color:#087c4d}
+.profile-danger{color:#c62828!important;background:#fff5f5!important}
+@media(max-width:700px){.profile-page{padding:25px 12px 95px}.profile-hero{padding:22px;align-items:flex-start;flex-direction:column}.profile-user{align-items:flex-start}.profile-stats{grid-template-columns:1fr 1fr}.profile-grid{grid-template-columns:1fr}.profile-stat:last-child{grid-column:1/-1}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+<section class="profile-hero">
+    <div class="profile-user">
+      <div class="profile-avatar">{% if user.profile_photo %}<img src="{{ url_for('static', filename='uploads/' ~ user.profile_photo) }}" alt="عکس پروفایل">{% else %}{{ (user.full_name or 'ج')[0]|upper }}{% endif %}</div>
+      <div>
+        <h1>{{ user.full_name or 'کاربر جاکو' }} {% if blue_tick_active %}<span class="verified-tick" title="تیک آبی فعال">✓</span>{% endif %}</h1>
+        <p>{{ user.mobile or user.email or 'عضو جاکو' }}</p>
+      </div>
+    </div>
+    <a class="profile-edit" href="{{ url_for('profile_edit') }}">✏️ ویرایش پروفایل</a>
+  </section>
+
+  <section class="profile-stats">
+    <div class="profile-stat">
+      <strong>{{ bookings_count }}</strong>
+      <span>رزروهای من</span>
+    </div>
+    <div class="profile-stat">
+      <strong>{{ favorites_count }}</strong>
+      <span>علاقه‌مندی‌ها</span>
+    </div>
+    <div class="profile-stat">
+      <strong>{{ listings_count }}</strong>
+      <span>آگهی‌های من</span>
+    </div>
+  </section>
+
+  <div class="profile-grid">
+    {% if user.role in ['host','admin'] %}
+    <section class="profile-card">
+      <h2>اعتماد و سابقه میزبان</h2>
+      <div class="profile-row"><span>شماره تأیید شده</span><strong>{{ '🟢 بله' if user.phone_verified else '⚪ در انتظار' }}</strong></div>
+      <div class="profile-row"><span>هویت تأیید شده</span><strong>{{ '🟢 بله' if user.identity_verified else '⚪ تأیید نشده' }}</strong></div>
+      <div class="profile-row"><span>امتیاز میزبان</span><strong>⭐ {{ '%.1f'|format(host_rating or 0) }}</strong></div>
+      <div class="profile-row"><span>اقامتگاه‌ها</span><strong>{{ listings_count }}</strong></div>
+    </section>
+    {% endif %}
+    <section class="profile-card" id="account">
+      <h2>اطلاعات حساب</h2>
+      <div class="profile-row">
+        <span>نام و نام خانوادگی</span>
+        <strong>{{ user.full_name or 'ثبت نشده' }}</strong>
+      </div>
+      <div class="profile-row">
+        <span>شماره موبایل</span>
+        <strong>{{ user.mobile or 'ثبت نشده' }}</strong>
+      </div>
+      <div class="profile-row">
+        <span>ایمیل</span>
+        <strong>{{ user.email or 'ثبت نشده' }}</strong>
+      </div>
+      <div class="profile-row">
+        <span>نوع حساب</span>
+        <strong>
+          {% if user.role == 'admin' %}مدیر{% elif user.role == 'host' %}میزبان{% else %}مهمان{% endif %}
+        </strong>
+      </div>
+    </section>
+
+    <section class="profile-card">
+      <h2>دسترسی سریع</h2>
+      <div class="profile-menu">
+        {% if user.role in ['host','admin'] %}<a class="profile-blue-tick" href="{{ url_for('blue_tick') }}"><span>🔵 تیک آبی</span><span>{{ 'فعال' if blue_tick_active else 'خرید' }} ←</span></a>{% endif %}
+        <a href="{{ url_for('bookings') }}"><span>📅 رزروهای من</span><span>←</span></a>
+        <a href="{{ url_for('favorites') }}"><span>❤️ علاقه‌مندی‌ها</span><span>←</span></a>
+
+        {% if user.role in ['host','admin'] %}
+          <a href="{{ url_for('host_panel') }}"><span>🏡 پنل میزبان</span><span>←</span></a>
+          <a href="{{ url_for('create_listing') }}"><span>➕ ثبت اجاره</span><span>←</span></a>
+        {% endif %}
+
+        {% if user.role == 'admin' %}
+          <a href="{{ url_for('admin_panel') }}"><span>⚙️ پنل مدیریت</span><span>←</span></a>
+        {% endif %}
+
+        <a class="profile-danger" href="{{ url_for('logout') }}"><span>↪ خروج از حساب</span><span>←</span></a>
+      </div>
+    </section>
+  </div>
+
+</div>
+{% endblock %}
